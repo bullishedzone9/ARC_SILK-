@@ -596,7 +596,7 @@ html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-be
       <button class="secondary" type="button" onclick="openAuth('signup')">Sign Up</button>
     </div>
   </div>
-</div><header class="top"><div class="logo">ARC<b>_</b>SILK <span id="arcApiState" class="arc-api-state" role="status">API: not checked</span></div><div class="arc-api-actions"><button class="secondary" type="button" onclick="connectApi()">Configure API</button><button class="secondary" type="button" onclick="testApiConnection()">Test connection</button></div><nav><button class="navbtn active" data-view="home">Discover</button><button class="navbtn" data-view="orders">Orders</button><button class="navbtn" data-view="purchases">My Purchases</button><button class="navbtn" data-view="earnings">Seller Earnings</button><button class="navbtn" data-view="dashboard">Dashboard</button><button class="navbtn" data-view="verification">Verification</button><button id="managementNav" class="navbtn" data-view="management" style="display:none">Management</button></nav><button id="arcAuthControl" class="secondary" type="button" hidden onclick="arcSilkSupabaseSignOut()">Sign out</button></header><section id="home" class="view active"><div class="hero"><div class="heroCard"><div class="eyebrow">Music collaboration marketplace</div><h1>Where sound finds its specialist.</h1><p class="muted">Discover producers, beatmakers, engineers, songwriters, vocalists and studios. Core access is free; eligible purchases disclose the 5% ARC_SILK platform commission before confirmation.</p><div class="stats"><div class="stat"><strong>5+</strong><span class="muted">minimum seller listings</span></div><div class="stat"><strong>5%</strong><span class="muted">platform commission</span></div><div class="stat"><strong>24/7</strong><span class="muted">remote collaboration</span></div></div></div><div class="heroCard heroAside"><div class="eyebrow">Built for music people</div><h2>Discover → Pay → Collaborate</h2><p class="muted">Verified payment creates a project workroom. Milestones, completion and refund states stay connected to the order.</p><button class="primary" onclick="document.getElementById('discover').scrollIntoView({behavior:'smooth'})">Explore specialists</button></div></div>
+</div><header class="top"><div class="logo">ARC<b>_</b>SILK <span id="arcApiState" class="arc-api-state" role="status">API: not checked</span></div><div class="arc-api-actions"><button class="secondary" type="button" onclick="connectApi()">Configure API</button><button class="secondary" type="button" onclick="testApiConnection()">Test connection</button></div><nav><button class="navbtn active" data-view="home">Discover</button><button class="navbtn" data-view="orders">Orders</button><button class="navbtn" data-view="purchases">My Purchases</button><button class="navbtn" data-view="earnings">Seller Earnings</button><button class="navbtn" data-view="dashboard">Dashboard</button><button class="navbtn" data-view="verification">Verification</button><button class="navbtn" data-view="arcSellerStudioV118">Seller Studio</button><button id="managementNav" class="navbtn" data-view="management" style="display:none">Management</button></nav><button id="arcAuthControl" class="secondary" type="button" hidden onclick="arcSilkSupabaseSignOut()">Sign out</button></header><section id="home" class="view active"><div class="hero"><div class="heroCard"><div class="eyebrow">Music collaboration marketplace</div><h1>Where sound finds its specialist.</h1><p class="muted">Discover producers, beatmakers, engineers, songwriters, vocalists and studios. Core access is free; eligible purchases disclose the 5% ARC_SILK platform commission before confirmation.</p><div class="stats"><div class="stat"><strong>5+</strong><span class="muted">minimum seller listings</span></div><div class="stat"><strong>5%</strong><span class="muted">platform commission</span></div><div class="stat"><strong>24/7</strong><span class="muted">remote collaboration</span></div></div></div><div class="heroCard heroAside"><div class="eyebrow">Built for music people</div><h2>Discover → Pay → Collaborate</h2><p class="muted">Verified payment creates a project workroom. Milestones, completion and refund states stay connected to the order.</p><button class="primary" onclick="document.getElementById('discover').scrollIntoView({behavior:'smooth'})">Explore specialists</button></div></div>
 <section class="v84-mode" aria-label="ARC_SILK experience mode">
  <div class="v84-modehead"><div><div class="eyebrow">Adaptive experience</div><h2 id="v84ModeTitle">Start simple. Go deeper when you need to.</h2><p class="muted" id="v84ModeText">Tell ARC_SILK what you are trying to do. You do not need to understand the marketplace architecture first.</p></div><div class="v84-badge" id="v84RoleBadge">Simple mode</div></div>
  <div class="v84-modes" role="tablist" aria-label="Experience modes">
@@ -1324,4 +1324,98 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
 </style>
 <script id="arc-silk-v115-marker">document.body.dataset.arcSilkBuild='v116-discovery-api-failsafe';</script>
 
+
+<section id="arcSellerStudioV118" class="view" aria-label="Seller listing studio">
+ <div class="card">
+  <div class="eyebrow">Creator workspace</div><h1>Seller Studio</h1>
+  <p class="muted">Create drafts, submit listings for review, and activate your public seller profile after at least five submitted listings. Sound previews are limited to 30 seconds.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0">
+   <div class="notice"><span class="muted">Drafts</span><h2 id="arcSSDraftCount">0</h2></div>
+   <div class="notice"><span class="muted">Submitted</span><h2 id="arcSSSubmittedCount">0 / 5</h2></div>
+   <div class="notice"><span class="muted">Active</span><h2 id="arcSSActiveCount">0</h2></div>
+  </div>
+  <div id="arcSSStatus" class="notice" role="status">Sign in to manage your listings.</div>
+  <form id="arcSSForm" class="card" style="margin:16px 0;padding:18px">
+   <h2 id="arcSSFormHeading">Create a listing</h2>
+   <input id="arcSSListingId" type="hidden">
+   <div class="two">
+    <label>Listing title<input id="arcSSTitle" minlength="3" maxlength="120" required placeholder="e.g. Afrobeats vocal production"></label>
+    <label>Type<select id="arcSSType" required><option value="service">Service</option><option value="digital_product">Digital product</option></select></label>
+    <label>Category<input id="arcSSCategory" minlength="2" maxlength="80" required placeholder="Producer, mixing, beats…"></label>
+    <label>Price<input id="arcSSPrice" type="number" min="0.01" step="0.01" required placeholder="Price"></label>
+    <label>Currency<select id="arcSSCurrency"><option>NGN</option><option>USD</option><option>GBP</option><option>EUR</option><option>USDC</option><option>BTC</option></select></label>
+    <label>Preview duration (seconds)<input id="arcSSDuration" type="number" min="1" max="30" value="30"></label>
+   </div>
+   <label>Description<textarea id="arcSSDescription" maxlength="5000" rows="4" style="width:100%" placeholder="Describe what the buyer receives"></textarea></label>
+   <label>Audio preview URL (optional)<input id="arcSSPreview" type="url" placeholder="https://…"></label>
+   <div class="actionrow" style="margin-top:14px"><button class="primary" type="submit" id="arcSSSaveDraft">Save draft</button><button class="secondary" type="button" id="arcSSSubmitListing">Submit listing</button><button class="secondary" type="button" id="arcSSCancelEdit" hidden>Cancel edit</button></div>
+   <p class="mini muted">Use a URL for audio you are allowed to share. This form stores a preview link; it does not upload audio files.</p>
+  </form>
+  <div class="actionrow"><button class="primary" id="arcSSActivateSeller" type="button">Activate seller profile</button><button class="secondary" id="arcSSRefresh" type="button">Refresh listings</button></div>
+  <p class="muted mini">Seller activation is enforced by the database and requires five or more submitted listings. Submitted listings remain subject to review before marketplace publication.</p>
+  <h2>Your listings</h2><div id="arcSSListings" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px"><div class="notice">Sign in to load your listings.</div></div>
+ </div>
+</section>
+<style id="arc-seller-studio-v118-css">
+#arcSellerStudioV118 label{display:flex;flex-direction:column;gap:6px;margin:9px 0;color:var(--muted);font-size:13px}
+#arcSellerStudioV118 input,#arcSellerStudioV118 select,#arcSellerStudioV118 textarea{width:100%;min-width:0;background:#0b1728;color:var(--ink);border:1px solid #254766;border-radius:10px;padding:10px}
+#arcSellerStudioV118 input:focus,#arcSellerStudioV118 select:focus,#arcSellerStudioV118 textarea:focus{outline:2px solid #48c9f3;border-color:#48c9f3}
+#arcSellerStudioV118 .notice{overflow-wrap:anywhere}
+#arcSellerStudioV118 .ss-card{background:linear-gradient(145deg,#10233a,#0b1728);border:1px solid #254766;border-radius:14px;padding:14px;min-width:0}
+#arcSellerStudioV118 .ss-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#arcSellerStudioV118 .ss-actions button{flex:1 1 90px}
+@media(max-width:600px){#arcSellerStudioV118 .two{grid-template-columns:1fr}#arcSellerStudioV118 .card{padding:12px}}
+</style>
+<script id="arc-seller-studio-v118">
+(function(){
+ const $=id=>document.getElementById(id);
+ const host=$('arcSellerStudioV118'); if(!host)return;
+ const form=$('arcSSForm'), status=$('arcSSStatus'), cards=$('arcSSListings');
+ let rows=[], busy=false;
+ function say(msg,kind){status.className='notice '+(kind||'');status.textContent=msg;}
+ function client(){if(typeof initClient==='function'){const c=initClient();if(c)return c;}return window.ARC_SILK_AUTH_CLIENT||window.ARC_SILK_PUBLIC_CLIENT||null;}
+ async function currentUser(){const c=client();if(!c)throw new Error('Supabase authentication is not available. Reload and try again.');const {data,error}=await c.auth.getSession();if(error)throw error;if(!data.session?.user)throw new Error('Sign in first to manage your seller listings.');return {c,user:data.session.user};}
+ function clearForm(){form.reset();$('arcSSListingId').value='';$('arcSSDuration').value='30';$('arcSSFormHeading').textContent='Create a listing';$('arcSSSaveDraft').textContent='Save draft';$('arcSSSubmitListing').textContent='Submit listing';$('arcSSCancelEdit').hidden=true;}
+ function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
+ function edit(row){$('arcSSListingId').value=row.id;$('arcSSTitle').value=row.title||'';$('arcSSType').value=row.listing_type||'service';$('arcSSCategory').value=row.category||'';$('arcSSPrice').value=row.price||'';$('arcSSCurrency').value=row.currency||'NGN';$('arcSSDescription').value=row.description||'';$('arcSSPreview').value=row.preview_url||'';$('arcSSDuration').value=row.preview_duration_seconds||30;$('arcSSFormHeading').textContent='Edit listing';$('arcSSSaveDraft').textContent='Save changes';$('arcSSSubmitListing').textContent='Save and submit';$('arcSSCancelEdit').hidden=false;form.scrollIntoView({behavior:'smooth',block:'start'});}
+ function render(){
+  $('arcSSDraftCount').textContent=rows.filter(x=>x.status==='draft').length;
+  $('arcSSSubmittedCount').textContent=rows.filter(x=>x.status==='submitted').length+' / 5';
+  $('arcSSActiveCount').textContent=rows.filter(x=>x.status==='active').length;
+  cards.replaceChildren();
+  if(!rows.length){cards.append(node('div','notice','No listings yet. Create your first draft above.'));return;}
+  rows.forEach(row=>{
+   const card=node('article','ss-card'), title=node('h3','',row.title), meta=node('p','muted mini',row.listing_type.replace('_',' ')+' · '+row.category), price=node('p','price',row.currency+' '+Number(row.price).toLocaleString()), desc=node('p','',row.description||'No description added.'), state=node('p','pill','Status: '+row.status);
+   card.append(title,meta,price,desc,state);
+   if(row.preview_url){const a=node('a','','Open preview link');a.href=row.preview_url;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}
+   const actions=node('div','ss-actions');
+   if(row.status==='draft'||row.status==='submitted'){const e=node('button','secondary','Edit');e.type='button';e.onclick=()=>edit(row);actions.append(e);}
+   if(row.status==='draft'){const submit=node('button','primary','Submit');submit.type='button';submit.onclick=()=>save(row.id,'submitted');actions.append(submit);}
+   card.append(actions);cards.append(card);
+  });
+ }
+ async function refresh(){
+  if(busy)return;busy=true;cards.replaceChildren(node('div','notice','Loading your listings…'));
+  try{const {c,user}=await currentUser();const {data,error}=await c.from('marketplace_listings').select('id,seller_id,title,description,listing_type,category,price,currency,preview_url,preview_duration_seconds,status,created_at,updated_at').eq('seller_id',user.id).order('created_at',{ascending:false}).limit(100);if(error)throw error;rows=data||[];render();const {data:p,error:pe}=await c.from('profiles').select('is_seller,is_public,display_name,country,city').eq('user_id',user.id).maybeSingle();if(pe)throw pe;const submitted=rows.filter(x=>x.status==='submitted').length;say((p?.is_seller?'Seller profile active. ':'Seller profile not activated. ')+submitted+' submitted listing(s); '+Math.max(0,5-submitted)+' more needed before activation.',p?.is_seller?'ok':'');$('arcSSActivateSeller').disabled=submitted<5||!!p?.is_seller;$('arcSSActivateSeller').textContent=p?.is_seller?'Seller profile active':submitted<5?'Submit '+(5-submitted)+' more to activate':'Activate public seller profile';
+  }catch(e){say(e.message||'Could not load seller listings. Check sign-in and database permissions.','warn');cards.replaceChildren(node('div','notice warn',e.message||'Could not load listings.'));}
+  finally{busy=false;}
+ }
+ function payload(statusValue){const title=$('arcSSTitle').value.trim(),category=$('arcSSCategory').value.trim(),price=Number($('arcSSPrice').value),duration=Number($('arcSSDuration').value||30),preview=$('arcSSPreview').value.trim();if(title.length<3||title.length>120)throw new Error('Title must be 3–120 characters.');if(category.length<2||category.length>80)throw new Error('Category must be 2–80 characters.');if(!Number.isFinite(price)||price<=0)throw new Error('Enter a price greater than zero.');if(!Number.isInteger(duration)||duration<1||duration>30)throw new Error('Preview duration must be between 1 and 30 seconds.');if(preview){const u=new URL(preview);if(!['https:'].includes(u.protocol))throw new Error('Preview links must use HTTPS.');}return {title,description:$('arcSSDescription').value.trim(),listing_type:$('arcSSType').value,category,price,currency:$('arcSSCurrency').value,preview_url:preview||null,preview_duration_seconds:preview?duration:null,status:statusValue,updated_at:new Date().toISOString()};}
+ async function save(id,statusValue){
+  if(busy)return;busy=true;
+  try{const {c,user}=await currentUser();const body=payload(statusValue);let result;if(id){const {data,error}=await c.from('marketplace_listings').update(body).eq('id',id).eq('seller_id',user.id).select('id').single();if(error)throw error;result=data;}else{const {data,error}=await c.from('marketplace_listings').insert({...body,seller_id:user.id}).select('id').single();if(error)throw error;result=data;}say(statusValue==='submitted'?'Listing submitted. It counts toward the five-listing seller activation requirement.':'Draft saved successfully.');clearForm();await refresh();}
+  catch(e){say(e.message||'Could not save listing.','warn');}finally{busy=false;}
+ }
+ form.addEventListener('submit',e=>{e.preventDefault();save($('arcSSListingId').value||null,$('arcSSListingId').value?($('arcSSSubmitListing').textContent==='Save and submit'?'submitted':(rows.find(x=>x.id===$('arcSSListingId').value)?.status||'draft')):'draft');});
+ $('arcSSSubmitListing').addEventListener('click',()=>{if(!form.reportValidity())return;save($('arcSSListingId').value||null,'submitted');});
+ $('arcSSCancelEdit').addEventListener('click',clearForm);$('arcSSRefresh').addEventListener('click',refresh);
+ $('arcSSActivateSeller').addEventListener('click',async()=>{
+  try{const {c,user}=await currentUser();const submitted=rows.filter(x=>x.status==='submitted').length;if(submitted<5)throw new Error('Submit at least five listings before activating your seller profile.');const {data:old,error:re}=await c.from('profiles').select('user_id,is_seller,is_public').eq('user_id',user.id).maybeSingle();if(re)throw re;if(!old)throw new Error('Your buyer profile is not ready yet. Sign out and sign in again, then retry.');const {error}=await c.from('profiles').update({is_seller:true,is_public:true,updated_at:new Date().toISOString()}).eq('user_id',user.id);if(error)throw error;say('Seller profile activated. Public visibility is enabled; listings still require marketplace approval before appearing in discovery.','ok');await refresh();
+  }catch(e){say(e.message||'Seller activation failed.','warn');}
+ });
+ document.querySelectorAll('.navbtn[data-view="arcSellerStudioV118"]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.view==='arcSellerStudioV118'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));host.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});refresh();},true));
+ document.addEventListener('click',e=>{const b=e.target.closest('.navbtn[data-view="arcSellerStudioV118"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.view==='arcSellerStudioV118'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));host.classList.add('active');refresh();},true);
+ window.arcSilkSellerStudioRefreshV118=refresh;
+})();
+</script>
 </body></html>
