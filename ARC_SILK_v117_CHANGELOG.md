@@ -19,3 +19,17 @@
 - Test with non-admin and admin accounts; verify public profile visibility and five-submitted-listing enforcement.
 
 The full updated HTML artifact is provided separately as `ARC_SILK_v117_Seller_Discovery_Fix.html`. The launch-page prototype remains unchanged.
+
+
+## v118 — Seller Studio listing workflow
+- Added a Seller Studio navigation entry and responsive creator workspace to the v117 HTML branch.
+- Added Supabase-authenticated listing create, read, update, draft, and submit actions against `public.marketplace_listings`; rows are scoped to the signed-in seller ID.
+- Added listing counters and a five-submitted-listing activation gate. The database trigger remains the enforcement layer for seller/public-profile activation.
+- Added input validation for title/category lengths, positive price, allowed currency via database constraints, HTTPS preview URLs, and preview durations of 1–30 seconds.
+- Submitted listings are described as awaiting review; the UI does not grant itself active marketplace status.
+
+## v118 validation status
+- Retrieved the committed branch file from GitHub and confirmed Seller Studio markup and Supabase listing CRUD code are present.
+- Parsed all 16 inline script bodies with JavaScript's function parser; 0 syntax error(s) found.
+- Supabase security advisor currently reports no findings.
+- Browser-based authenticated CRUD and five-listing activation still require live user-session tests; no test accounts or fake listings were created.
