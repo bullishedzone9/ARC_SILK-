@@ -1,0 +1,20 @@
+name: ARC_SILK HTML checks
+
+on:
+  push:
+    branches: [main, arc-silk-v117-seller-discovery-fix]
+  pull_request:
+    branches: [main]
+
+jobs:
+  static-html-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate Seller Studio and inline JavaScript
+        run: node scripts/check-arc-silk-html.mjs ARC_SILK_v117_Seller_Discovery_Fix.html
