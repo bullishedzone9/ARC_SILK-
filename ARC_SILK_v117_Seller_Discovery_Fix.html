@@ -1396,7 +1396,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
  }
  async function refresh(){
   if(busy)return;busy=true;cards.replaceChildren(node('div','notice','Loading your listings…'));
-  try{const {c,user}=await currentUser();const {data,error}=await c.from('marketplace_listings').select('id,seller_id,title,description,listing_type,category,price,currency,preview_url,preview_duration_seconds,status,created_at,updated_at').eq('seller_id',user.id).order('created_at',{ascending:false}).limit(100);if(error)throw error;rows=data||[];render();const {data:p,error:pe}=await c.from('profiles').select('is_seller,is_public,display_name,country,city').eq('user_id',user.id).maybeSingle();if(pe)throw pe;const submitted=rows.filter(x=>x.status==='submitted').length;say((p?.is_seller?'Seller profile active. ':'Seller profile not activated. ')+submitted+' submitted listing(s); '+Math.max(0,5-submitted)+' more needed before activation.',p?.is_seller?'ok':'');$('arcSSActivateSeller').disabled=submitted<5||!!p?.is_seller;$('arcSSActivateSeller').textContent=p?.is_seller?'Seller profile active':submitted<5?'Submit '+(5-submitted)+' more to activate':'Activate public seller profile';
+  try{const {c,user}=await currentUser();const {data,error}=await c.from('marketplace_listings').select('id,seller_id,title,description,listing_type,category,price,currency,preview_url,preview_duration_seconds,status,created_at,updated_at').eq('seller_id',user.id).order('created_at',{ascending:false}).limit(100);if(error)throw error;rows=data||[];render();const {data:p,error:pe}=await c.from('profiles').select('is_seller,is_public,display_name,country,city').eq('user_id',user.id).maybeSingle();if(pe)throw pe;const submitted=rows.filter(x=>x.status==='submitted').length;say((p?.is_seller?'Seller profile active. ':'Seller profile not activated. ')+submitted+' submitted listing(s); '+Math.max(0,5-submitted)+' more needed before activation.',p?.is_seller?'ok':'');$('arcSSActivateSeller').disabled=submitted<5||!!(p?.is_seller&&p?.is_public);$('arcSSActivateSeller').textContent=p?.is_seller?(p?.is_public?'Seller profile active':'Make seller profile public'):submitted<5?'Submit '+(5-submitted)+' more to activate':'Activate seller profile';
   }catch(e){say(e.message||'Could not load seller listings. Check sign-in and database permissions.','warn');cards.replaceChildren(node('div','notice warn',e.message||'Could not load listings.'));}
   finally{busy=false;}
  }
@@ -1410,7 +1410,23 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
  $('arcSSSubmitListing').addEventListener('click',()=>{if(!form.reportValidity())return;save($('arcSSListingId').value||null,'submitted');});
  $('arcSSCancelEdit').addEventListener('click',clearForm);$('arcSSRefresh').addEventListener('click',refresh);
  $('arcSSActivateSeller').addEventListener('click',async()=>{
-  try{const {c,user}=await currentUser();const submitted=rows.filter(x=>x.status==='submitted').length;if(submitted<5)throw new Error('Submit at least five listings before activating your seller profile.');const {data:old,error:re}=await c.from('profiles').select('user_id,is_seller,is_public').eq('user_id',user.id).maybeSingle();if(re)throw re;if(!old)throw new Error('Your buyer profile is not ready yet. Sign out and sign in again, then retry.');const {error}=await c.from('profiles').update({is_seller:true,is_public:true,updated_at:new Date().toISOString()}).eq('user_id',user.id);if(error)throw error;say('Seller profile activated. Public visibility is enabled; listings still require marketplace approval before appearing in discovery.','ok');await refresh();
+  try{
+   const {c,user}=await currentUser();
+   const submitted=rows.filter(x=>x.status==='submitted').length;
+   if(submitted<5)throw new Error('Submit at least five listings before activating your seller profile.');
+   const {data:profile,error:profileError}=await c.from('profiles').select('user_id,is_seller,is_public').eq('user_id',user.id).maybeSingle();
+   if(profileError)throw profileError;
+   if(!profile)throw new Error('Your buyer profile is not ready yet. Sign out and sign in again, then retry.');
+   if(!profile.is_seller){
+    const {data:activated,error:activationError}=await c.functions.invoke('activate-seller',{method:'POST'});
+    if(activationError)throw activationError;
+    if(!activated?.ok)throw new Error(activated?.error||'Seller activation was not confirmed.');
+   }
+   const {data:visibility,error:visibilityError}=await c.functions.invoke('set-profile-visibility',{method:'POST',body:{is_public:true}});
+   if(visibilityError)throw visibilityError;
+   if(!visibility?.ok||visibility.is_public!==true)throw new Error('Seller status is active, but public visibility was not confirmed. You can retry this action.');
+   say('Seller profile activated and public. Submitted listings still require marketplace approval before appearing in discovery.','ok');
+   await refresh();
   }catch(e){say(e.message||'Seller activation failed.','warn');}
  });
  document.querySelectorAll('.navbtn[data-view="arcSellerStudioV118"]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.view==='arcSellerStudioV118'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));host.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});refresh();},true));
