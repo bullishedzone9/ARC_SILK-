@@ -33,3 +33,16 @@ The full updated HTML artifact is provided separately as `ARC_SILK_v117_Seller_D
 - Parsed all 16 inline script bodies with JavaScript's function parser; 0 syntax error(s) found.
 - Supabase security advisor currently reports no findings.
 - Browser-based authenticated CRUD and five-listing activation still require live user-session tests; no test accounts or fake listings were created.
+
+
+## v118 — Seller Studio hardening
+- Added the Seller Studio listing interface with Supabase-backed create/read/update, draft and submit operations, listing counters, input validation, and a 30-second preview-duration cap.
+- Routed seller activation through the authenticated `activate-seller` Edge Function instead of directly changing privileged profile flags from the browser.
+- Routed public-profile visibility through the authenticated `set-profile-visibility` Edge Function. If seller activation succeeds but visibility fails, the UI allows retrying visibility without attempting to reactivate the seller.
+- Confirmed database constraints enforce title/category lengths, allowed currencies and listing types, positive prices, valid statuses, and 1–30 second preview duration.
+
+## v118 validation
+- Retrieved the latest HTML from the development branch after commit and confirmed both Edge Function calls are wired in.
+- Parsed all 16 inline JavaScript blocks successfully; no syntax errors found.
+- Supabase security advisor returned no findings.
+- Authenticated browser tests remain outstanding; no test accounts or fake listings were created.
