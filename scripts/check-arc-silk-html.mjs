@@ -45,14 +45,18 @@ assert.ok(publish.includes("!profile.is_seller||!profile.is_public"), "Publicati
 assert.ok(publish.includes("listing.preview_duration_seconds>30"), "Publication must enforce the 30-second preview cap");
 assert.ok(publish.includes('status:"active"'), "Publication must set listing status to active");
 
-
 const visibilityMigration = readFileSync("supabase/migrations/20261024003304_published_listings_visibility_eligibility.sql", "utf8");
 assert.ok(visibilityMigration.includes("status IN ('submitted','active')"), "Visibility recovery must count both submitted and published listings");
 assert.ok(visibilityMigration.includes("status='submitted'"), "Initial seller activation must still require submitted listings");
+const publicListingPolicy = readFileSync("supabase/migrations/20261024003400_public_listing_visibility_guard.sql", "utf8");
+assert.ok(publicListingPolicy.includes("seller_profile.is_public = true"), "Public listing reads must respect seller profile visibility");
+assert.ok(publicListingPolicy.includes("seller_profile.is_seller = true"), "Public listing reads must require seller-enabled profiles");
+assert.ok(publicListingPolicy.includes("(SELECT auth.uid()) = seller_id"), "Private listing owners must retain access to their own listings");
+assert.ok(publicListingPolicy.includes("status = 'active'"), "Non-owners must only see active listings");
 assert.ok(publish.includes('eq("id", listingId).eq("seller_id", user.id)'), "Listing lookup must be scoped to both listing ID and authenticated owner");
 assert.ok(publish.includes('eq("status","submitted")'), "Publication update must be conditional on submitted status");
 assert.ok(publish.includes('preview.protocol!=="https:"'), "Publication must reject non-HTTPS preview URLs");
 assert.ok(publish.includes('listing.status==="active"'), "Publication retries for an already-active listing must be idempotent");
 assert.ok(publish.includes('manual_listening_review:false'), "Publication must explicitly avoid routine manual listening review");
 
-console.log("ARC_SILK static checks passed: " + scripts.length + " inline scripts parsed; seller function contracts checked.");
+console.log("ARC_SILK static checks passed: " + scripts.length + " inline scripts parsed; seller function contracts and public visibility policy checked.");
