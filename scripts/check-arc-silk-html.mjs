@@ -56,7 +56,7 @@ assert.ok(publicListingPolicy.includes("status = 'active'"), "Non-owners must on
 assert.ok(publish.includes('eq("id", listingId).eq("seller_id", user.id)'), "Listing lookup must be scoped to both listing ID and authenticated owner");
 assert.ok(publish.includes('eq("status","submitted")'), "Publication update must be conditional on submitted status");
 assert.ok(publish.includes('preview.protocol!=="https:"'), "Publication must reject non-HTTPS preview URLs");
-assert.ok(publish.includes('listing.status==="active"'), "Publication retries for an already-active listing must be idempotent');
+assert.ok(publish.includes('listing.status==="active"'), "Publication retries for an already-active listing must be idempotent");
 assert.ok(publish.includes('manual_listening_review:false'), "Publication must explicitly avoid routine manual listening review");
 
 console.log("ARC_SILK static checks passed: " + scripts.length + " inline scripts parsed; seller function contracts and public visibility policy checked.");
