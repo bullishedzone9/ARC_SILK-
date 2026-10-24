@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 const file = process.argv[2] ?? "ARC_SILK_v117_Seller_Discovery_Fix.html";
 const html = readFileSync(file, "utf8");
-const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)];
+const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
 
 assert.ok(html.includes('id="arcSellerStudioV118"'), "Seller Studio section is missing");
 assert.ok(html.includes('data-view="arcSellerStudioV118"'), "Seller Studio navigation is missing");
@@ -30,7 +30,7 @@ for (const [name, source] of [["activate-seller", activate], ["set-profile-visib
   assert.ok(source.includes('req.method !== "POST"'), name + ": POST-only method guard is missing");
   assert.ok(source.includes("auth.getUser(token)"), name + ": server-side session validation is missing");
   assert.ok(source.includes('Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")'), name + ": service role must come from environment");
-  assert.ok(!/eyJ[A-Za-z0-9_-]{30,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}/.test(source), name + ": token-like secret found in source");
+  assert.ok(!/eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/.test(source), name + ": token-like secret found in source");
 }
 assert.ok(activate.includes('.eq("status", "submitted")'), "Seller activation must count submitted listings only");
 assert.ok(activate.includes("required_submitted_listings: 5"), "Seller activation must enforce the five-listing threshold");
