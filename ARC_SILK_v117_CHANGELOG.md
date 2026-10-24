@@ -46,3 +46,18 @@ The full updated HTML artifact is provided separately as `ARC_SILK_v117_Seller_D
 - Parsed all 16 inline JavaScript blocks successfully; no syntax errors found.
 - Supabase security advisor returned no findings.
 - Authenticated browser tests remain outstanding; no test accounts or fake listings were created.
+
+# ARC_SILK v118 — Seller Studio & activation checks
+
+## Included
+- Added Seller Studio for creating drafts, submitting listings, editing eligible listings, and tracking draft/submitted/active counts.
+- Enforced a 1–30 second preview duration in the form. Preview URLs are stored as links; direct audio upload is not included yet.
+- Connected seller activation and public visibility to authenticated Supabase Edge Functions. The backend verifies the user session and seller eligibility; public profile visibility also validates username and display name.
+- Added static contract checks for the Seller Studio, both Edge Functions, the five-submitted-listing rule, preview cap, and absence of a token-shaped secret in committed function source.
+- Confirmed the live Supabase security advisor currently reports no findings and inspected the active Edge Function definitions and table RLS policies.
+
+## Validation still required
+- The static checker has been updated in GitHub, but a successful hosted Actions run has not yet been confirmed.
+- No authenticated browser journey has been run; do not treat sign-up, listing CRUD, seller activation, or public discovery as end-to-end verified.
+- No fake accounts or marketplace listings were created.
+- Production deployment and PR merge remain pending explicit approval.
