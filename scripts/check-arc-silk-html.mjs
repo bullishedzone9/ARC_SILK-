@@ -46,7 +46,7 @@ assert.ok(publish.includes("listing.preview_duration_seconds>30"), "Publication 
 assert.ok(publish.includes('status:"active"'), "Publication must set listing status to active");
 
 
-const visibilityMigration = readFileSync("supabase/migrations/202610240002_published_listings_visibility_eligibility.sql", "utf8");
+const visibilityMigration = readFileSync("supabase/migrations/20261024003304_published_listings_visibility_eligibility.sql", "utf8");
 assert.ok(visibilityMigration.includes("status IN ('submitted','active')"), "Visibility recovery must count both submitted and published listings");
 assert.ok(visibilityMigration.includes("status='submitted'"), "Initial seller activation must still require submitted listings");
 assert.ok(publish.includes('eq("id", listingId).eq("seller_id", user.id)'), "Listing lookup must be scoped to both listing ID and authenticated owner");
