@@ -34,3 +34,9 @@ Status: prepared; browser execution is still pending. Run in a non-production te
 
 ## Release gate
 Do not mark the seller journey end-to-end verified until the authentication, listing ownership, five-listing activation, visibility, privacy, and price tests pass in staging. Do not merge or deploy solely because static checks pass.
+
+
+## SONG-01 — no manual song-listening review
+- Upload or submit a customer song/listing with a valid preview link.
+- Expected result: the workflow does not require an ARC_SILK staff member to listen to or approve the song before the customer can proceed.
+- Audio previews remain capped at 30 seconds. Copyright or policy reports, if implemented, are handled as a separate complaint process and are not routine song review.
