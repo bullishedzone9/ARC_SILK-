@@ -40,3 +40,10 @@ Do not mark the seller journey end-to-end verified until the authentication, lis
 - Upload or submit a customer song/listing with a valid preview link.
 - Expected result: the workflow does not require an ARC_SILK staff member to listen to or approve the song before the customer can proceed.
 - Audio previews remain capped at 30 seconds. Copyright or policy reports, if implemented, are handled as a separate complaint process and are not routine song review.
+
+
+## Seamless publication (v119)
+- SONG-02: A submitted listing can be published by its authenticated owner only when their seller profile is active and public.
+- SONG-03: Publication performs server-side metadata checks and enforces HTTPS preview URLs and a maximum 30-second preview; it does not require staff to listen to customer songs.
+- SONG-04: Attempts to publish another seller's listing, a draft, an invalid listing, or a listing with a preview longer than 30 seconds are rejected.
+- SONG-05: Published listings become active for Marketplace discovery. Five submitted listings remain the seller activation gate; active listings continue to count toward the seller's qualifying listing total for visibility recovery.
