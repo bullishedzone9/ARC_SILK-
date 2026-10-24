@@ -1371,7 +1371,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
  const $=id=>document.getElementById(id);
  const host=$('arcSellerStudioV118'); if(!host)return;
  const form=$('arcSSForm'), status=$('arcSSStatus'), cards=$('arcSSListings');
- let rows=[], busy=false;
+ let rows=[], busy=false, sellerIsPublic=false;
  function say(msg,kind){status.className='notice '+(kind||'');status.textContent=msg;}
  function client(){if(typeof initClient==='function'){const c=initClient();if(c)return c;}return window.ARC_SILK_AUTH_CLIENT||window.ARC_SILK_PUBLIC_CLIENT||null;}
  async function currentUser(){const c=client();if(!c)throw new Error('Supabase authentication is not available. Reload and try again.');const {data,error}=await c.auth.getSession();if(error)throw error;if(!data.session?.user)throw new Error('Sign in first to manage your seller listings.');return {c,user:data.session.user};}
@@ -1380,7 +1380,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
  function edit(row){$('arcSSListingId').value=row.id;$('arcSSTitle').value=row.title||'';$('arcSSType').value=row.listing_type||'service';$('arcSSCategory').value=row.category||'';$('arcSSPrice').value=row.price||'';$('arcSSCurrency').value=row.currency||'NGN';$('arcSSDescription').value=row.description||'';$('arcSSPreview').value=row.preview_url||'';$('arcSSDuration').value=row.preview_duration_seconds||30;$('arcSSFormHeading').textContent='Edit listing';$('arcSSSaveDraft').textContent='Save changes';$('arcSSSubmitListing').textContent='Save and submit';$('arcSSCancelEdit').hidden=false;form.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   $('arcSSDraftCount').textContent=rows.filter(x=>x.status==='draft').length;
-  $('arcSSSubmittedCount').textContent=rows.filter(x=>x.status==='submitted').length+' / 5';
+  $('arcSSSubmittedCount').textContent=rows.filter(x=>x.status==='submitted'||x.status==='active').length+' / 5';
   $('arcSSActiveCount').textContent=rows.filter(x=>x.status==='active').length;
   cards.replaceChildren();
   if(!rows.length){cards.append(node('div','notice','No listings yet. Create your first draft above.'));return;}
@@ -1391,16 +1391,22 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
    const actions=node('div','ss-actions');
    if(row.status==='draft'||row.status==='submitted'){const e=node('button','secondary','Edit');e.type='button';e.onclick=()=>edit(row);actions.append(e);}
    if(row.status==='draft'){const submit=node('button','primary','Submit');submit.type='button';submit.onclick=()=>save(row.id,'submitted');actions.append(submit);}
+   if(row.status==='submitted'){const publish=node('button','primary','Publish to Marketplace');publish.type='button';publish.disabled=!sellerIsPublic;publish.title=sellerIsPublic?'Publish this listing immediately after automatic validation':'Activate your public seller profile first';publish.onclick=()=>publishListing(row.id);actions.append(publish);}
    card.append(actions);cards.append(card);
   });
  }
  async function refresh(){
   if(busy)return;busy=true;cards.replaceChildren(node('div','notice','Loading your listings…'));
-  try{const {c,user}=await currentUser();const {data,error}=await c.from('marketplace_listings').select('id,seller_id,title,description,listing_type,category,price,currency,preview_url,preview_duration_seconds,status,created_at,updated_at').eq('seller_id',user.id).order('created_at',{ascending:false}).limit(100);if(error)throw error;rows=data||[];render();const {data:p,error:pe}=await c.from('profiles').select('is_seller,is_public,display_name,country,city').eq('user_id',user.id).maybeSingle();if(pe)throw pe;const submitted=rows.filter(x=>x.status==='submitted').length;say((p?.is_seller?'Seller profile active. ':'Seller profile not activated. ')+submitted+' submitted listing(s); '+Math.max(0,5-submitted)+' more needed before activation.',p?.is_seller?'ok':'');$('arcSSActivateSeller').disabled=submitted<5||!!(p?.is_seller&&p?.is_public);$('arcSSActivateSeller').textContent=p?.is_seller?(p?.is_public?'Seller profile active':'Make seller profile public'):submitted<5?'Submit '+(5-submitted)+' more to activate':'Activate seller profile';
+  try{const {c,user}=await currentUser();const {data,error}=await c.from('marketplace_listings').select('id,seller_id,title,description,listing_type,category,price,currency,preview_url,preview_duration_seconds,status,created_at,updated_at').eq('seller_id',user.id).order('created_at',{ascending:false}).limit(100);if(error)throw error;rows=data||[];render();const {data:p,error:pe}=await c.from('profiles').select('is_seller,is_public,display_name,country,city').eq('user_id',user.id).maybeSingle();if(pe)throw pe;const submitted=rows.filter(x=>x.status==='submitted').length, qualifying=rows.filter(x=>x.status==='submitted'||x.status==='active').length;sellerIsPublic=!!(p?.is_seller&&p?.is_public);say((p?.is_seller?'Seller profile active. ':'Seller profile not activated. ')+qualifying+' qualifying listing(s); '+(p?.is_seller?'published listings count toward the five-listing requirement.':Math.max(0,5-submitted)+' more submitted listing(s) needed before activation.'),p?.is_seller?'ok':'');$('arcSSActivateSeller').disabled=submitted<5||!!(p?.is_seller&&p?.is_public);$('arcSSActivateSeller').textContent=p?.is_seller?(p?.is_public?'Seller profile active':'Make seller profile public'):submitted<5?'Submit '+(5-submitted)+' more to activate':'Activate seller profile';
   }catch(e){say(e.message||'Could not load seller listings. Check sign-in and database permissions.','warn');cards.replaceChildren(node('div','notice warn',e.message||'Could not load listings.'));}
   finally{busy=false;}
  }
  function payload(statusValue){const title=$('arcSSTitle').value.trim(),category=$('arcSSCategory').value.trim(),price=Number($('arcSSPrice').value),duration=Number($('arcSSDuration').value||30),preview=$('arcSSPreview').value.trim();if(title.length<3||title.length>120)throw new Error('Title must be 3–120 characters.');if(category.length<2||category.length>80)throw new Error('Category must be 2–80 characters.');if(!Number.isFinite(price)||price<=0)throw new Error('Enter a price greater than zero.');if(!Number.isInteger(duration)||duration<1||duration>30)throw new Error('Preview duration must be between 1 and 30 seconds.');if(preview){const u=new URL(preview);if(!['https:'].includes(u.protocol))throw new Error('Preview links must use HTTPS.');}return {title,description:$('arcSSDescription').value.trim(),listing_type:$('arcSSType').value,category,price,currency:$('arcSSCurrency').value,preview_url:preview||null,preview_duration_seconds:preview?duration:null,status:statusValue,updated_at:new Date().toISOString()};}
+ async function publishListing(id){
+  if(busy)return;busy=true;
+  try{const {c}=await currentUser();const {data,error}=await c.functions.invoke('publish-listing',{method:'POST',body:{listing_id:id}});if(error)throw error;if(!data?.ok||data.status!=='active')throw new Error(data?.error||'Publication was not confirmed.');say('Published to Marketplace. No manual song-listening review was required.','ok');await refresh();}
+  catch(e){say(e.message||'Could not publish this listing.','warn');}finally{busy=false;}
+ }
  async function save(id,statusValue){
   if(busy)return;busy=true;
   try{const {c,user}=await currentUser();const body=payload(statusValue);let result;if(id){const {data,error}=await c.from('marketplace_listings').update(body).eq('id',id).eq('seller_id',user.id).select('id').single();if(error)throw error;result=data;}else{const {data,error}=await c.from('marketplace_listings').insert({...body,seller_id:user.id}).select('id').single();if(error)throw error;result=data;}say(statusValue==='submitted'?'Listing submitted. It counts toward the five-listing seller activation requirement.':'Draft saved successfully.');clearForm();setTimeout(()=>refresh(),0);}
@@ -1425,7 +1431,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#12365b 0%,var(--bg) 52%);co
    const {data:visibility,error:visibilityError}=await c.functions.invoke('set-profile-visibility',{method:'POST',body:{is_public:true}});
    if(visibilityError)throw visibilityError;
    if(!visibility?.ok||visibility.is_public!==true)throw new Error('Seller status is active, but public visibility was not confirmed. You can retry this action.');
-   say('Seller profile activated and public. Submitted listings still require marketplace approval before appearing in discovery.','ok');
+   say('Seller profile activated and public. Submitted listings can now be published directly after automatic metadata validation.','ok');
    await refresh();
   }catch(e){say(e.message||'Seller activation failed.','warn');}
  });
