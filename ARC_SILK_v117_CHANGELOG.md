@@ -61,3 +61,10 @@ The full updated HTML artifact is provided separately as `ARC_SILK_v117_Seller_D
 - No authenticated browser journey has been run; do not treat sign-up, listing CRUD, seller activation, or public discovery as end-to-end verified.
 - No fake accounts or marketplace listings were created.
 - Production deployment and PR merge remain pending explicit approval.
+
+
+## v119 — customer song listening-review removed
+- Updated Seller Studio copy to state clearly that customer songs are not held for manual listening review.
+- Kept the existing 30-second audio preview limit and five-submitted-listing seller activation requirement.
+- Clarified that listing-detail checks and policy reports are separate from listening to customer songs.
+- Added SONG-01 to the staging test plan. This is a documented acceptance test and has not yet been run in a browser.
