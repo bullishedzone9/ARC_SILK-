@@ -45,4 +45,14 @@ assert.ok(publish.includes("!profile.is_seller||!profile.is_public"), "Publicati
 assert.ok(publish.includes("listing.preview_duration_seconds>30"), "Publication must enforce the 30-second preview cap");
 assert.ok(publish.includes('status:"active"'), "Publication must set listing status to active");
 
+
+const visibilityMigration = readFileSync("supabase/migrations/202610240002_published_listings_visibility_eligibility.sql", "utf8");
+assert.ok(visibilityMigration.includes("status IN ('submitted','active')"), "Visibility recovery must count both submitted and published listings");
+assert.ok(visibilityMigration.includes("status='submitted'"), "Initial seller activation must still require submitted listings");
+assert.ok(publish.includes('eq("id", listingId).eq("seller_id", user.id)'), "Listing lookup must be scoped to both listing ID and authenticated owner");
+assert.ok(publish.includes('eq("status","submitted")'), "Publication update must be conditional on submitted status");
+assert.ok(publish.includes('preview.protocol!=="https:"'), "Publication must reject non-HTTPS preview URLs");
+assert.ok(publish.includes('listing.status==="active"'), "Publication retries for an already-active listing must be idempotent");
+assert.ok(publish.includes('manual_listening_review:false'), "Publication must explicitly avoid routine manual listening review");
+
 console.log("ARC_SILK static checks passed: " + scripts.length + " inline scripts parsed; seller function contracts checked.");
