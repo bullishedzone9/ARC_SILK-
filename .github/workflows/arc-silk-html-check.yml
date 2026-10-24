@@ -1,0 +1,36 @@
+name: ARC_SILK HTML checks
+
+on:
+  push:
+    branches: [main, arc-silk-v117-seller-discovery-fix]
+  pull_request:
+    branches: [main]
+
+jobs:
+  static-html-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull-request head (or pushed commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate Seller Studio and inline JavaScript
+        run: node scripts/check-arc-silk-html.mjs ARC_SILK_v117_Seller_Discovery_Fix.html
+
+  live-edge-auth-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull-request head (or pushed commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify deployed Edge Functions reject unauthenticated writes
+        run: node scripts/smoke-edge-functions.mjs
