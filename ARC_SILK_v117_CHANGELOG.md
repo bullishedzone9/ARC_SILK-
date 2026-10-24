@@ -68,3 +68,10 @@ The full updated HTML artifact is provided separately as `ARC_SILK_v117_Seller_D
 - Kept the existing 30-second audio preview limit and five-submitted-listing seller activation requirement.
 - Clarified that listing-detail checks and policy reports are separate from listening to customer songs.
 - Added SONG-01 to the staging test plan. This is a documented acceptance test and has not yet been run in a browser.
+
+
+## v119 — Seamless publishing
+- Added an authenticated `publish-listing` Edge Function: validates listing ownership, active/public seller state, listing metadata, HTTPS preview URLs, and the 30-second preview limit before changing a submitted listing to active.
+- Seller Studio now exposes “Publish to Marketplace” for submitted listings after the seller profile is public, and updates status counts without any routine song-listening approval step.
+- Five submitted listings remain required for initial seller activation; active listings are included when restoring public visibility.
+- Added static contract checks and test-plan cases. Live authenticated browser testing and production deployment remain separate gates.
