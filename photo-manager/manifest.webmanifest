@@ -1,0 +1,19 @@
+{
+  "name": "Pluginflex Photo Manager",
+  "short_name": "Pluginflex",
+  "description": "A private, organised home for your photos.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d1018",
+  "theme_color": "#0d1018",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
