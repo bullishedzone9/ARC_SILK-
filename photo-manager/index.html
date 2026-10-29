@@ -6,6 +6,38 @@
 <style>
 :root{color-scheme:dark;--bg:#101012;--panel:#19191d;--peach:#f6c2a8;--muted:#aaa8ad;--line:#343238}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f7f4f1;font:16px/1.5 system-ui,Arial,sans-serif}main{max-width:900px;margin:auto;padding:24px 16px 56px}.brand{color:var(--peach);font-weight:900;letter-spacing:.12em}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:12px 0}p,.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin:18px 0}.row{display:flex;gap:10px;flex-wrap:wrap}input,button{font:inherit;border-radius:10px;padding:12px;border:1px solid #55505a}input{background:#111115;color:white;min-width:0;flex:1}button{background:var(--peach);color:#291a15;border:0;font-weight:750;cursor:pointer}button.secondary{background:transparent;color:#fff;border:1px solid #62564e}button:disabled{opacity:.5;cursor:wait}#status{white-space:pre-wrap;color:var(--peach);margin-top:12px}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}.photo{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#111115}.photo img{display:block;width:100%;height:150px;object-fit:cover}.photo p{font-size:12px;padding:0 10px;overflow-wrap:anywhere}.photo button{margin:0 8px 8px;padding:8px;font-size:13px}.badge{display:inline-block;margin:8px 8px 0;padding:3px 8px;border-radius:999px;background:#2a2526;color:var(--peach);font-size:11px;font-weight:700}.hidden{display:none!important}small{color:var(--muted)}label{display:block;margin-bottom:8px}
+
+/* Responsive, touch-friendly controls */
+button, input, select { max-width:100%; }
+button { min-height:44px; touch-action:manipulation; transition:transform .12s ease,filter .12s ease,opacity .12s ease; }
+button:active { transform:scale(.98); filter:brightness(.96); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--peach); outline-offset:3px; }
+.row { align-items:stretch; }
+.row > button { flex:0 1 auto; }
+.photo { min-width:0; }
+.photo button { min-height:40px; }
+.photo input, .photo select { min-height:42px; }
+@media (max-width:560px) {
+  main { padding:18px 12px 40px; }
+  .panel { padding:14px; border-radius:15px; }
+  .row { gap:8px; }
+  .row > button { flex:1 1 140px; }
+  #authPanel .row:first-of-type { flex-direction:column; }
+  #authPanel .row:first-of-type input { width:100%; flex:none; }
+  #library .row > button { flex:1 1 100%; }
+  .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+  .photo img { height:clamp(110px,35vw,170px); }
+  .photo p { padding:0 8px; }
+}
+@media (max-width:360px) {
+  .gallery { grid-template-columns:minmax(0,1fr); }
+  h1 { font-size:30px; }
+  .row > button { flex-basis:100%; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { scroll-behavior:auto!important; transition:none!important; }
+}
+
 </style>
 </head>
 <body><main>
