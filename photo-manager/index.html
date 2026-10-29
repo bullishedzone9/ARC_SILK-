@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d1018"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>Pluginflex Photo Manager</title>
 <style>
 :root{color-scheme:dark;--bg:#0d1018;--panel:#151b27;--panel2:#101620;--peach:#f4c5ad;--gold:#e8bd85;--muted:#aeb8c8;--line:#2b3545;--line-hot:#6b5b57;--text:#f7f8fb;--good:#a8dfc1;--shadow:0 18px 48px rgba(0,0,0,.24)}
@@ -149,4 +150,13 @@ $('loadMore').onclick=()=>loadPhotos(false);
 $('refresh').onclick=loadPhotos;
 $('upload').onclick=async()=>{if(!currentUser){status('Sign in first.');return}const files=[...$('files').files];if(!files.length){status('Select at least one photo first.');return}const button=$('upload');button.disabled=true;let done=0,fail=[];try{for(const file of files){if(!file.type.startsWith('image/')){fail.push(file.name+': not an image');continue}if(file.size>10*1024*1024){fail.push(file.name+': exceeds 10 MB');continue}const path=currentUser.id+'/'+Date.now()+'_'+crypto.randomUUID().slice(0,8)+'_'+safeName(file.name);const {error}=await supabase.storage.from(bucket).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});if(error)fail.push(file.name+': '+error.message);else{const metadataError=await saveMetadata(path,classifyCategory(file.name),'');if(metadataError)fail.push(file.name+': uploaded but metadata failed: '+metadataError.message);done++}}$('files').value='';status('Uploaded '+done+' photo(s).'+(fail.length?'\nIssues:\n'+fail.join('\n'):''));await loadPhotos()}catch(e){status('Upload failed: '+(e?.message||'Please retry.'))}finally{button.disabled=false}};
 import('https://esm.sh/@supabase/supabase-js@2').then(({createClient})=>{supabase=createClient(SUPABASE_URL_BOOT,SUPABASE_PUBLISHABLE_KEY_BOOT);supabase.auth.onAuthStateChange(()=>{setTimeout(()=>syncSession().catch(e=>status('Session error: '+(e?.message||'Reload the page.'))),0)});return syncSession()}).catch(e=>status('Login service failed to load: '+(e?.message||'Check your connection, then reload.')));
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {
+      // The photo manager remains usable if service-worker registration is unavailable.
+    });
+  });
+}
 </script></body></html>
