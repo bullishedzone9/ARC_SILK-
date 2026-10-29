@@ -51,6 +51,9 @@ async function loadAuthorization(){
   const result=await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
   if(result.error)throw result.error;
   details=result.data;
+  // Supabase returns OAuthRedirect when this user has already consented.
+  // Redirect immediately instead of rendering a consent form without client details.
+  if(details?.redirect_url){location.assign(details.redirect_url);return}
   const client=details?.client||details?.oauth_client||{};
   $('clientName').textContent=client.name||client.client_name||'An app requests access';
   $('clientDescription').textContent=client.description||'This app is requesting permission to connect to your Pluginflex Photo Manager account.';
