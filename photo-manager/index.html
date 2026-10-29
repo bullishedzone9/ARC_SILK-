@@ -39,7 +39,7 @@ function classifyCategory(name){
  return 'Needs Review';
 }
 const categories=['Music Artwork','Artist Profiles','Portfolios','Promotion','Marketplace Listings','Personal Archive','Needs Review'];
-function displayName(name){return name.replace(/^cat-[a-z-]+__/, '').replace(/^\\d+_[a-f0-9-]+_/, '')}
+function displayName(name){return name.replace(/^cat-[a-z-]+__/, '').replace(/^\d+_[a-f0-9-]+_/, '')}
 async function getMetadata(path){const {data,error}=await supabase.from('photo_library_metadata').select('category,caption').eq('user_id',currentUser.id).eq('object_path',path).maybeSingle();return error?null:data}
 async function saveMetadata(path,category,caption=''){const {error}=await supabase.from('photo_library_metadata').upsert({user_id:currentUser.id,object_path:path,category,caption,updated_at:new Date().toISOString()},{onConflict:'user_id,object_path'});return error}
 async function syncSession(){const {data,error}=await supabase.auth.getSession();if(error){status(error.message);return}currentUser=data.session?.user||null;$('library').classList.toggle('hidden',!currentUser);$('signOut').classList.toggle('hidden',!currentUser);$('signIn').classList.toggle('hidden',!!currentUser);$('signUp').classList.toggle('hidden',!!currentUser);if(currentUser){status('Signed in. Loading your private photos…');await loadPhotos()}else{status('Sign in to upload or view your private photos.')}}
