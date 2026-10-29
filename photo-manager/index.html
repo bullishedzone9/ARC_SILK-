@@ -132,7 +132,7 @@ async function loadPhotos(reset=true){
  if(reset){galleryOffset=0;galleryHasMore=false;$('gallery').replaceChildren();moreButton.classList.add('hidden')}
  moreButton.disabled=true;
  try{
-  const {data,error}=await supabase.storage.from(bucket).list(currentUser.id,{limit:100,offset:galleryOffset,sortBy:{column:'created_at',order:'desc'}});
+  const {data,error}=await supabase.storage.from(bucket).list(currentUser.id,{limit:24,offset:galleryOffset,sortBy:{column:'created_at',order:'desc'}});
   if(error){status('Could not load photos: '+error.message);return}
   const files=(data||[]).filter(file=>file.name);
   if(reset&&!files.length){$('gallery').innerHTML='<p class="muted">No photos yet. Choose photos above to get started.</p>';status('Your private library is ready.');return}
@@ -158,7 +158,7 @@ async function loadPhotos(reset=true){
    const download=document.createElement('button');download.type='button';download.className='secondary';download.textContent='Download';download.style.cssText='flex:1;min-height:38px;padding:8px;font-size:12px';download.disabled=!photoBlob;download.onclick=()=>{const url=URL.createObjectURL(photoBlob);const a=document.createElement('a');a.href=url;a.download=displayName(file.name);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);status('Download started for '+displayName(file.name)+'.')};
    actions.append(preview,download);card.append(del,actions);$('gallery').append(card);
   }
-  galleryOffset+=files.length;galleryHasMore=files.length===100;moreButton.classList.toggle('hidden',!galleryHasMore);filterPhotos();
+  galleryOffset+=files.length;galleryHasMore=files.length===24;moreButton.classList.toggle('hidden',!galleryHasMore);filterPhotos();
   status('Loaded '+galleryOffset+' photo(s) in this library view.'+(galleryHasMore?' Select “Load more photos” to continue.':''));
  }catch(e){status('Could not load photos: '+(e?.message||'Please refresh and try again.'))}
  finally{galleryLoading=false;moreButton.disabled=false}
@@ -183,13 +183,22 @@ if (installButton) {
       document.getElementById("status").textContent = "To install Pluginflex on Android, open this page in Chrome, tap the three-dot menu, then choose Install app or Add to Home screen. If neither option appears, update Chrome and try again later.";
       return;
     }
-    deferredInstallPrompt.prompt();
-    const choice = await deferredInstallPrompt.userChoice;
-    document.getElementById("status").textContent = choice.outcome === "accepted"
-      ? "Pluginflex installation accepted."
-      : "Installation dismissed. You can keep using Pluginflex in your browser.";
-    deferredInstallPrompt = null;
-    installButton.classList.add("hidden");
+    installButton.disabled = true;
+    installButton.textContent = "Opening installer…";
+    try {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      document.getElementById("status").textContent = choice.outcome === "accepted"
+        ? "Pluginflex installation accepted."
+        : "Installation dismissed. You can keep using Pluginflex in your browser.";
+      deferredInstallPrompt = null;
+      installButton.classList.add("hidden");
+    } catch {
+      document.getElementById("status").textContent = "Installation could not open. Use Chrome menu → Install app or Add to Home screen.";
+    } finally {
+      installButton.disabled = false;
+      installButton.textContent = "Install Pluginflex";
+    }
   });
 }
 window.addEventListener("appinstalled", () => {
