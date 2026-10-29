@@ -54,7 +54,7 @@ label{display:block;margin:12px 0 8px;color:#d7dce5;font-size:13px;font-weight:6
 </style>
 </head>
 <body><main>
-<div class="brand">Pluginflex Photo Manager</div><nav class="legalnav" aria-label="Site information"><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./support.html">Support</a></nav><div class="row" style="margin:14px 0"><button id="installApp" class="secondary hidden" type="button">Install Pluginflex</button></div><h1>Your photos. Beautifully organised.</h1>
+<div class="brand">Pluginflex Photo Manager</div><nav class="legalnav" aria-label="Site information"><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./support.html">Support</a></nav><div class="row" style="margin:14px 0"><button id="installApp" class="secondary" type="button">Install Pluginflex</button></div><h1>Your photos. Beautifully organised.</h1>
 <p>A clean, private home for your photos. Upload, browse, label and caption images in one organised library.</p>
 <section class="panel" id="authPanel"><h2>Sign in</h2><p class="muted">Sign in to your private Pluginflex library, or create your account to get started.</p>
 <div class="row"><input id="email" type="email" autocomplete="email" placeholder="Email address" aria-label="Email address"><input id="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"></div>
@@ -162,7 +162,10 @@ window.addEventListener("beforeinstallprompt", event => {
 const installButton = document.getElementById("installApp");
 if (installButton) {
   installButton.addEventListener("click", async () => {
-    if (!deferredInstallPrompt) return;
+    if (!deferredInstallPrompt) {
+      document.getElementById("status").textContent = "To install Pluginflex on Android, open this page in Chrome, tap the three-dot menu, then choose Install app or Add to Home screen. If neither option appears, update Chrome and try again later.";
+      return;
+    }
     deferredInstallPrompt.prompt();
     const choice = await deferredInstallPrompt.userChoice;
     document.getElementById("status").textContent = choice.outcome === "accepted"
