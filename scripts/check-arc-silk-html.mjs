@@ -40,6 +40,9 @@ assert.ok(activate.includes('.eq("status", "submitted")'), "Seller activation mu
 assert.ok(activate.includes("required_submitted_listings: 5"), "Seller activation must enforce the five-listing threshold");
 assert.ok(visibility.includes("username.length < 3"), "Public visibility must validate username length");
 assert.ok(visibility.includes("displayName.length < 2"), "Public visibility must validate display name");
+assert.ok(visibility.includes("if (!profile.is_seller)"), "Public visibility must reject non-sellers");
+assert.ok(visibility.includes('.in("status", ["submitted", "active"])'), "Public visibility must enforce five qualifying listings when using the service-role client");
+assert.ok(visibility.includes("seller_requirements_not_met"), "Public visibility must report unmet listing eligibility");
 assert.ok(publish.includes('eq("seller_id", user.id)'), "Publication must verify listing ownership");
 assert.ok(publish.includes("!profile.is_seller||!profile.is_public"), "Publication must require an active public seller profile");
 assert.ok(publish.includes("listing.preview_duration_seconds>30"), "Publication must enforce the 30-second preview cap");
