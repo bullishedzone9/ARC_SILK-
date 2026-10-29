@@ -91,6 +91,19 @@ async function syncSession(){const {data,error}=await supabase.auth.getSession()
 async function auth(kind){const email=$('email').value.trim(),password=$('password').value;if(!email||!password){status('Enter your email and password.');return}if(!supabase){status('Login service is still loading. Wait a few seconds and try again.');return}const button=$(kind==='signup'?'signUp':'signIn');button.disabled=true;status(kind==='signup'?'Creating account…':'Signing in…');try{const result=kind==='signup'?await supabase.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin}}):await supabase.auth.signInWithPassword({email,password});if(result.error){status(result.error.message);return}if(kind==='signup'&&!result.data.session){status('Account created. Check your email for the confirmation link. Open the newest email on this device, then return here to sign in. If the link expires, use Resend confirmation email.');$('resendConfirm').classList.remove('hidden');return}status('Authentication successful.');await syncSession()}catch(e){status('Login request failed: '+(e?.message||'Please check your connection and try again.'))}finally{button.disabled=false}}
 $('signIn').onclick=()=>auth('signin');$('signUp').onclick=()=>auth('signup');$('resendConfirm').onclick=async()=>{const email=$('email').value.trim();if(!email){status('Enter the email address you used to sign up.');return}const button=$('resendConfirm');button.disabled=true;try{const {error}=await supabase.auth.resend({type:'signup',email,options:{emailRedirectTo:window.location.origin}});status(error?'Could not resend confirmation: '+error.message:'A fresh confirmation email has been requested. Open the newest email and use its link.');}catch(e){status('Could not resend confirmation: '+(e?.message||'Check your connection.'))}finally{button.disabled=false}};$('signOut').onclick=async()=>{const {error}=await supabase.auth.signOut();status(error?error.message:'Signed out.');await syncSession()};
 let galleryOffset=0, galleryHasMore=false, galleryLoading=false;
+function openPhotoPreview(blob,name){
+ if(!blob)return;
+ const url=URL.createObjectURL(blob);
+ const overlay=document.createElement('div');
+ overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Photo preview: '+name);
+ overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(5,8,13,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:12px';
+ const close=document.createElement('button');close.type='button';close.textContent='Close preview';close.className='secondary';close.style.cssText='align-self:flex-end;flex:none';
+ const image=document.createElement('img');image.src=url;image.alt=name;image.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:12px;box-shadow:0 16px 60px rgba(0,0,0,.5)';
+ const caption=document.createElement('p');caption.textContent=name;caption.style.cssText='max-width:100%;overflow-wrap:anywhere;text-align:center;color:#f7f8fb;margin:0';
+ const closePreview=()=>{URL.revokeObjectURL(url);overlay.remove();document.removeEventListener('keydown',onKey)};
+ const onKey=e=>{if(e.key==='Escape')closePreview()};
+ close.onclick=closePreview;overlay.addEventListener('click',e=>{if(e.target===overlay)closePreview()});overlay.append(close,image,caption);document.body.append(overlay);document.addEventListener('keydown',onKey);close.focus();
+}
 const categoryFilter=$('categoryFilter');
 for(const category of categories){const option=document.createElement('option');option.value=category;option.textContent=category;categoryFilter.append(option)}
 function filterPhotos(){
@@ -127,7 +140,8 @@ async function loadPhotos(reset=true){
    const path=currentUser.id+'/'+file.name;
    const {data:blob,error:downloadError}=await supabase.storage.from(bucket).download(path);
    const card=document.createElement('article');card.className='photo';
-   if(!downloadError&&blob){const img=document.createElement('img');img.alt=displayName(file.name);img.loading='lazy';img.src=URL.createObjectURL(blob);img.onload=()=>URL.revokeObjectURL(img.src);card.append(img)}
+   let photoBlob=null;
+   if(!downloadError&&blob){photoBlob=blob;const img=document.createElement('img');img.alt=displayName(file.name);img.loading='lazy';img.src=URL.createObjectURL(blob);img.onload=()=>URL.revokeObjectURL(img.src);img.onerror=()=>URL.revokeObjectURL(img.src);img.style.cursor='zoom-in';img.title='Tap to preview full size';img.onclick=()=>openPhotoPreview(photoBlob,displayName(file.name));card.append(img)}
    const meta=await getMetadata(path);
    const select=document.createElement('select');select.setAttribute('aria-label','Category label');select.style.cssText='width:calc(100% - 16px);margin:8px;border-radius:8px;padding:7px;background:#19191d;color:#f6c2a8;border:1px solid #62564e';
    for(const category of categories){const option=document.createElement('option');option.value=category;option.textContent=category;select.append(option)}
@@ -139,7 +153,10 @@ async function loadPhotos(reset=true){
    card.append(select,caption);
    const del=document.createElement('button');del.className='secondary';del.innerHTML='<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg><span>Delete</span>';del.setAttribute('aria-label','Delete photo');
    del.onclick=async()=>{if(!confirm('Delete '+file.name+' from your private library?'))return;const {error}=await supabase.storage.from(bucket).remove([path]);if(error)status('Delete failed: '+error.message);else{const {error:metaError}=await supabase.from('photo_library_metadata').delete().eq('user_id',currentUser.id).eq('object_path',path);status(metaError?'Photo deleted; metadata cleanup warning: '+metaError.message:'Photo and its saved metadata deleted.');await loadPhotos(true)}};
-   card.append(del);$('gallery').append(card);
+   const actions=document.createElement('div');actions.className='row';actions.style.cssText='padding:0 8px 10px;margin:0;gap:6px';
+   const preview=document.createElement('button');preview.type='button';preview.className='secondary';preview.textContent='Preview';preview.style.cssText='flex:1;min-height:38px;padding:8px;font-size:12px';preview.disabled=!photoBlob;preview.onclick=()=>openPhotoPreview(photoBlob,displayName(file.name));
+   const download=document.createElement('button');download.type='button';download.className='secondary';download.textContent='Download';download.style.cssText='flex:1;min-height:38px;padding:8px;font-size:12px';download.disabled=!photoBlob;download.onclick=()=>{const url=URL.createObjectURL(photoBlob);const a=document.createElement('a');a.href=url;a.download=displayName(file.name);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);status('Download started for '+displayName(file.name)+'.')};
+   actions.append(preview,download);card.append(del,actions);$('gallery').append(card);
   }
   galleryOffset+=files.length;galleryHasMore=files.length===100;moreButton.classList.toggle('hidden',!galleryHasMore);filterPhotos();
   status('Loaded '+galleryOffset+' photo(s) in this library view.'+(galleryHasMore?' Select “Load more photos” to continue.':''));
