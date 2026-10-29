@@ -1,6 +1,6 @@
 const CACHE_NAME = "arcsilk-shell-v1";
 const SHELL = [
-  "./ARC_SILK_Public_Launch_Page_v0_4-2.html",
+  "./index.html",
   "./manifest.webmanifest",
   "./arcsilk-icon.svg"
 ];
@@ -15,7 +15,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(async () => (await caches.match("./ARC_SILK_Public_Launch_Page_v0_4-2.html")) || Response.error()));
+    event.respondWith(fetch(request).catch(async () => (await caches.match("./index.html")) || Response.error()));
     return;
   }
   if (url.pathname.endsWith("/manifest.webmanifest") || url.pathname.endsWith("/arcsilk-icon.svg")) {
