@@ -1,8 +1,9 @@
 export const SUPPORTED_PROTOCOL_VERSIONS = ["2025-03-26"] as const;
 export const DEFAULT_PROTOCOL_VERSION = SUPPORTED_PROTOCOL_VERSIONS[0];
 
-export function negotiateProtocolVersion(requested: unknown): { protocolVersion: string; requestedSupported: boolean } {
-  if (typeof requested === "string" && (SUPPORTED_PROTOCOL_VERSIONS as readonly string[]).includes(requested)) {
+export function negotiateProtocolVersion(requested: unknown): { protocolVersion: string; requestedSupported: boolean } | null {
+  if (typeof requested !== "string") return null;
+  if ((SUPPORTED_PROTOCOL_VERSIONS as readonly string[]).includes(requested)) {
     return { protocolVersion: requested, requestedSupported: true };
   }
   return { protocolVersion: DEFAULT_PROTOCOL_VERSION, requestedSupported: false };
