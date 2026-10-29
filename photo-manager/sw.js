@@ -16,11 +16,13 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
   if (request.mode === "navigate") {
     event.respondWith(fetch(request).catch(() => caches.match("./")));
     return;
   }
-  if (["./manifest.webmanifest", "./icon.svg"].includes(url.pathname.slice(url.pathname.lastIndexOf("/photo-manager/") >= 0 ? url.pathname.lastIndexOf("/photo-manager/") + 14 : 0))) {
+
+  if (url.pathname.endsWith("/manifest.webmanifest") || url.pathname.endsWith("/icon.svg")) {
     event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
   }
 });
