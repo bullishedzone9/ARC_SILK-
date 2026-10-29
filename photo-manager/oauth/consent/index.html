@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Authorize ARC_SILK Photos Plugin</title>
+<style>
+:root{color-scheme:dark;--bg:#101012;--panel:#19191d;--peach:#f6c2a8;--muted:#aaa8ad;--line:#343238}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f7f4f1;font:16px/1.5 system-ui,Arial,sans-serif}main{max-width:560px;margin:0 auto;padding:28px 16px 56px}.brand{color:var(--peach);font-weight:900;letter-spacing:.12em}h1{font-size:clamp(28px,6vw,38px);line-height:1.12;margin:18px 0 8px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin:18px 0}p,.muted,small{color:var(--muted)}label{display:block;margin:14px 0 6px}input,button{font:inherit;border-radius:10px;padding:12px;border:1px solid #55505a;width:100%;min-height:46px}input{background:#111115;color:white}button{background:var(--peach);color:#291a15;border:0;font-weight:750;cursor:pointer;margin-top:10px}button.secondary{background:transparent;color:#fff;border:1px solid #62564e}button:disabled{opacity:.55}#status{white-space:pre-wrap;color:var(--peach);margin-top:14px}.scope{padding:12px;border:1px solid var(--line);border-radius:12px;margin:8px 0}.actions{display:flex;gap:10px;flex-wrap:wrap}.actions button{flex:1 1 140px}a{color:var(--peach)}.hidden{display:none!important}
+</style>
+</head>
+<body><main>
+<div class="brand">ARC_SILK ⚡</div>
+<h1>Authorize Photos access</h1>
+<p>Review the request before allowing an app to access your ARC_SILK private photo library.</p>
+<section class="panel" id="loginPanel">
+<h2>Sign in to continue</h2>
+<p class="muted">Use the same account you use for ARC_SILK Photos Plugin. Your password is sent only to Supabase Auth.</p>
+<label for="email">Email address</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password">
+<button id="signIn">Sign in securely</button>
+<p id="loginNote" class="muted">After signing in, review the requesting app and its requested permissions.</p>
+</section>
+<section class="panel hidden" id="consentPanel">
+<h2 id="clientName">An app requests access</h2>
+<p id="clientDescription" class="muted">Check the access request carefully. You can deny it at any time.</p>
+<div class="scope"><strong>Requested permissions</strong><p id="scopes">Loading requested permissions…</p></div>
+<p><strong>Photo-library access:</strong> The connected client may use the available ARC_SILK photo tools as your signed-in account allows. Only approve if you trust the app.</p>
+<div class="actions"><button id="approve">Approve access</button><button class="secondary" id="deny">Deny</button></div>
+</section>
+<p id="status" role="status" aria-live="polite">Preparing secure authorization…</p>
+<p><small><a href="/">Return to ARC_SILK Photos Plugin</a> · <a href="/privacy.html">Privacy</a></small></p>
+</main>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SUPABASE_URL='https://kvmmuorfaioiqxstxkmn.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_LWnLljOv0c_hh3tutRHaHA_WvXs_JQw';
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const authorizationId=params.get('authorization_id');
+let details=null;
+function status(message){$('status').textContent=message}
+function showLogin(){ $('loginPanel').classList.remove('hidden'); $('consentPanel').classList.add('hidden'); }
+function showConsent(){ $('loginPanel').classList.add('hidden'); $('consentPanel').classList.remove('hidden'); }
+async function loadAuthorization(){
+ if(!authorizationId){status('Missing authorization request. Return to the app that sent you here and try again.');return}
+ const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+ if(sessionError){status('Could not check sign-in: '+sessionError.message);return}
+ if(!sessionData.session){showLogin();status('Sign in to review this access request.');return}
+ try{
+  const result=await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
+  if(result.error)throw result.error;
+  details=result.data;
+  const client=details?.client||details?.oauth_client||{};
+  $('clientName').textContent=client.name||client.client_name||'An app requests access';
+  $('clientDescription').textContent=client.description||'This app is requesting permission to connect to your ARC_SILK account.';
+  const scopeText=details?.scope||details?.scopes||'No scope details were returned.';
+  $('scopes').textContent=Array.isArray(scopeText)?scopeText.join(', '):String(scopeText);
+  showConsent();status('Review the permissions above, then choose Approve or Deny.');
+ }catch(error){showLogin();status('Could not load authorization details. Please sign in again or restart the connection. '+(error?.message||''))}
+}
+$('signIn').onclick=async()=>{
+ const email=$('email').value.trim(),password=$('password').value;
+ if(!email||!password){status('Enter your email and password.');return}
+ $('signIn').disabled=true;status('Signing in…');
+ try{const {error}=await supabase.auth.signInWithPassword({email,password});if(error){status('Sign-in failed: '+error.message);return}await loadAuthorization()}
+ catch(error){status('Sign-in request failed. Check your connection and retry.')}
+ finally{$('signIn').disabled=false}
+};
+$('approve').onclick=async()=>{
+ if(!authorizationId)return;
+ $('approve').disabled=true;$('deny').disabled=true;status('Approving access…');
+ try{const {data,error}=await supabase.auth.oauth.approveAuthorization(authorizationId);if(error)throw error;if(!data?.redirect_url)throw new Error('Authorization completed but no redirect was returned.');location.assign(data.redirect_url)}
+ catch(error){status('Could not approve access: '+(error?.message||'Please retry.'));$('approve').disabled=false;$('deny').disabled=false}
+};
+$('deny').onclick=async()=>{
+ if(!authorizationId)return;
+ $('approve').disabled=true;$('deny').disabled=true;status('Denying access…');
+ try{const {data,error}=await supabase.auth.oauth.denyAuthorization(authorizationId);if(error)throw error;if(!data?.redirect_url)throw new Error('Denial completed but no redirect was returned.');location.assign(data.redirect_url)}
+ catch(error){status('Could not deny access: '+(error?.message||'Please retry.'));$('approve').disabled=false;$('deny').disabled=false}
+};
+supabase.auth.onAuthStateChange((event,session)=>{if(session)setTimeout(()=>loadAuthorization(),0)});
+loadAuthorization();
+</script></body></html>
