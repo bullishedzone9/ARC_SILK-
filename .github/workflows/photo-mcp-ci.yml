@@ -1,0 +1,37 @@
+name: Photo MCP validation
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/arc-silk-photo-mcp/**"
+      - ".github/workflows/photo-mcp-ci.yml"
+  push:
+    branches:
+      - "fix/photo-mcp-protocol-upload-reporting"
+    paths:
+      - "supabase/functions/arc-silk-photo-mcp/**"
+      - ".github/workflows/photo-mcp-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deno-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Format check
+        run: deno fmt --check supabase/functions/arc-silk-photo-mcp/helpers.ts supabase/functions/arc-silk-photo-mcp/helpers_test.ts supabase/functions/arc-silk-photo-mcp/index.ts
+
+      - name: Run MCP helper regression tests
+        run: deno test supabase/functions/arc-silk-photo-mcp/helpers_test.ts
+
+      - name: Type-check MCP Edge Function
+        run: deno check supabase/functions/arc-silk-photo-mcp/index.ts
