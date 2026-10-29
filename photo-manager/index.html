@@ -2,56 +2,65 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ARC_SILK Photos Plugin</title>
+<title>Pluginflex Photo Manager</title>
 <style>
-:root{color-scheme:dark;--bg:#101012;--panel:#19191d;--peach:#f6c2a8;--muted:#aaa8ad;--line:#343238}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f7f4f1;font:16px/1.5 system-ui,Arial,sans-serif}main{max-width:900px;margin:auto;padding:24px 16px 56px}.brand{color:var(--peach);font-weight:900;letter-spacing:.12em}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:12px 0}.legalnav{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}.legalnav a{color:var(--peach);font-size:14px;text-decoration:none}.legalnav a:focus-visible{outline:2px solid var(--peach);outline-offset:3px}p,.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin:18px 0}.row{display:flex;gap:10px;flex-wrap:wrap}input,button{font:inherit;border-radius:10px;padding:12px;border:1px solid #55505a}input{background:#111115;color:white;min-width:0;flex:1}button{background:var(--peach);color:#291a15;border:0;font-weight:750;cursor:pointer}button.secondary{background:transparent;color:#fff;border:1px solid #62564e}button:disabled{opacity:.5;cursor:wait}#status{white-space:pre-wrap;color:var(--peach);margin-top:12px}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}.photo{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#111115}.photo img{display:block;width:100%;height:150px;object-fit:cover}.photo p{font-size:12px;padding:0 10px;overflow-wrap:anywhere}.photo button{margin:0 8px 8px;padding:8px;font-size:13px}.badge{display:inline-block;margin:8px 8px 0;padding:3px 8px;border-radius:999px;background:#2a2526;color:var(--peach);font-size:11px;font-weight:700}.hidden{display:none!important}small{color:var(--muted)}label{display:block;margin-bottom:8px}
-
-/* Responsive, touch-friendly controls */
-button, input, select { max-width:100%; }
-button { min-height:44px; touch-action:manipulation; transition:transform .12s ease,filter .12s ease,opacity .12s ease; }
-button:active { transform:scale(.98); filter:brightness(.96); }
-button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--peach); outline-offset:3px; }
-.row { align-items:stretch; }
-.row > button { flex:0 1 auto; }
-.photo { min-width:0; }
-.photo button { min-height:40px; }
-.photo input, .photo select { min-height:42px; }
-@media (max-width:560px) {
-  main { padding:18px 12px 40px; }
-  .panel { padding:14px; border-radius:15px; }
-  .row { gap:8px; }
-  .row > button { flex:1 1 140px; }
-  #authPanel .row:first-of-type { flex-direction:column; }
-  #authPanel .row:first-of-type input { width:100%; flex:none; }
-  #library .row > button { flex:1 1 100%; }
-  .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
-  .photo img { height:clamp(110px,35vw,170px); }
-  .photo p { padding:0 8px; }
-}
-@media (max-width:360px) {
-  .gallery { grid-template-columns:minmax(0,1fr); }
-  h1 { font-size:30px; }
-  .row > button { flex-basis:100%; }
-}
-@media (prefers-reduced-motion:reduce) {
-  *, *::before, *::after { scroll-behavior:auto!important; transition:none!important; }
-}
-
-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
-button svg, button span { pointer-events:none; }
-button svg { flex:0 0 auto; }
+:root{color-scheme:dark;--bg:#0d1018;--panel:#151b27;--panel2:#101620;--peach:#f4c5ad;--gold:#e8bd85;--muted:#aeb8c8;--line:#2b3545;--line-hot:#6b5b57;--text:#f7f8fb;--good:#a8dfc1;--shadow:0 18px 48px rgba(0,0,0,.24)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 12% 0%,rgba(82,111,157,.18),transparent 38%),radial-gradient(ellipse at 100% 22%,rgba(244,197,173,.09),transparent 30%),var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+main{width:min(100%,980px);margin:auto;padding:28px 20px 56px}
+.brand{display:inline-flex;align-items:center;gap:9px;color:var(--peach);font-size:12px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;padding:8px 12px;border:1px solid rgba(244,197,173,.23);border-radius:999px;background:rgba(244,197,173,.055)}
+.brand:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px rgba(232,189,133,.55)}
+h1{font-size:clamp(32px,6vw,54px);line-height:1.04;letter-spacing:-.045em;margin:20px 0 12px;max-width:760px}
+h2{font-size:clamp(19px,3vw,23px);letter-spacing:-.025em;margin:0 0 8px}
+p{margin:10px 0;color:var(--muted)}.muted,small{color:var(--muted)}
+.legalnav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 20px}
+.legalnav a{color:#d9dfea;font-size:13px;text-decoration:none;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.025);transition:border-color .16s ease,color .16s ease}
+.legalnav a:hover{color:var(--peach);border-color:var(--line-hot)}
+.legalnav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.panel{position:relative;background:linear-gradient(145deg,rgba(255,255,255,.035),transparent 46%),var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px;margin:20px 0;box-shadow:var(--shadow);overflow:hidden}
+.panel:before{content:"";position:absolute;top:0;left:22px;right:22px;height:1px;background:linear-gradient(90deg,transparent,rgba(244,197,173,.42),transparent)}
+.row{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;margin-top:10px}
+input,button,select{font:inherit;max-width:100%;border-radius:12px}
+input{background:var(--panel2);color:var(--text);border:1px solid #344052;padding:12px 13px;min-width:0;flex:1;transition:border-color .16s ease,box-shadow .16s ease}
+input::placeholder{color:#78869a}
+input:focus,select:focus{border-color:#b99c91;box-shadow:0 0 0 3px rgba(244,197,173,.08)}
+button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 15px;background:linear-gradient(135deg,#f7d0bc,var(--peach));color:#201b1a;border:1px solid rgba(255,255,255,.16);font-weight:750;cursor:pointer;touch-action:manipulation;transition:transform .14s ease,filter .14s ease,border-color .14s ease;box-shadow:0 5px 14px rgba(0,0,0,.12)}
+button:hover{filter:brightness(1.045);transform:translateY(-1px)}
+button:active{transform:scale(.985)}
+button.secondary{background:rgba(255,255,255,.025);color:#e9edf4;border:1px solid #3a4658;box-shadow:none}
+button.secondary:hover{border-color:#8b766f;color:var(--peach)}
+button:disabled{opacity:.52;cursor:wait;transform:none}
+button svg,button span{pointer-events:none}button svg{flex:0 0 auto}
+#status{white-space:pre-wrap;color:var(--good);margin-top:14px;padding:10px 12px;border-left:2px solid rgba(168,223,193,.5);background:rgba(168,223,193,.045);border-radius:0 10px 10px 0;overflow-wrap:anywhere}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px;margin-top:18px}
+.photo{min-width:0;overflow:hidden;border:1px solid #303b4d;border-radius:16px;background:linear-gradient(150deg,rgba(255,255,255,.035),transparent 45%),#101620;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.photo:hover{transform:translateY(-2px);border-color:#6b5b57;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.photo img{display:block;width:100%;height:170px;object-fit:cover;background:#0b0f16;border-bottom:1px solid var(--line)}
+.photo p{font-size:12px;padding:0 11px;overflow-wrap:anywhere;line-height:1.4;color:#e1e5ec}
+.photo button{margin:0 9px 10px;padding:8px 11px;font-size:12px;min-height:38px}
+.photo input,.photo select{min-height:42px}
+.photo select{width:calc(100% - 18px);margin:8px 9px 6px;border:1px solid #344052;padding:8px;background:#111823;color:var(--peach)}
+.photo input{width:calc(100% - 18px);margin:0 9px 9px;background:#0f151f;padding:9px 10px;font-size:13px}
+.badge{display:inline-block;margin:8px 8px 0;padding:3px 8px;border-radius:999px;background:#2a2526;color:var(--peach);font-size:11px;font-weight:700}
+.hidden{display:none!important}
+small{display:block;margin-top:22px;font-size:12px;letter-spacing:.02em}
+label{display:block;margin:12px 0 8px;color:#d7dce5;font-size:13px;font-weight:650}
+#files{width:100%;padding:12px;background:rgba(8,12,19,.45);border:1px dashed #475367}
+@media(max-width:600px){main{padding:18px 12px 38px}.panel{padding:16px;border-radius:18px;margin:15px 0}.panel:before{left:16px;right:16px}.row{gap:8px}.row>button{flex:1 1 135px}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.photo img{height:clamp(112px,36vw,168px)}.photo p{padding:0 8px}.photo input{font-size:12px}.legalnav{gap:6px}.legalnav a{padding:7px 9px}#authPanel .row:first-of-type{flex-direction:column}#authPanel .row:first-of-type input{width:100%;flex:none}#library .row>button{flex:1 1 100%}}
+@media(max-width:360px){.gallery{grid-template-columns:minmax(0,1fr)}h1{font-size:32px}.row>button{flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body><main>
-<div class="brand">ARC_SILK ⚡</div><nav class="legalnav" aria-label="Site information"><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./support.html">Support</a></nav><h1>ARC_SILK Photos Plugin</h1>
-<p>Upload and organise photos in one private ARC_SILK Photo Library. Photos stay in one folder; category labels and captions are stored separately in your private account metadata.</p>
-<section class="panel" id="authPanel"><h2>Sign in</h2><p class="muted">Use your ARC-SILK Supabase account. If you are new, create an account first.</p>
+<div class="brand">Pluginflex Photo Manager</div><nav class="legalnav" aria-label="Site information"><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./support.html">Support</a></nav><h1>Your photos. Beautifully organised.</h1>
+<p>A clean, private home for your photos. Upload, browse, label and caption images in one organised library.</p>
+<section class="panel" id="authPanel"><h2>Sign in</h2><p class="muted">Sign in to your private Pluginflex library, or create your account to get started.</p>
 <div class="row"><input id="email" type="email" autocomplete="email" placeholder="Email address" aria-label="Email address"><input id="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"></div>
 <div class="row" style="margin-top:12px"><button id="signIn"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg><span>Sign in</span></button><button class="secondary" id="signUp"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"/></svg><span>Create account</span></button><button class="secondary hidden" id="resendConfirm"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M16 3l3 2-3 2"/></svg><span>Resend confirmation email</span></button><button class="secondary hidden" id="signOut"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg><span>Sign out</span></button></div><div id="status" role="status" aria-live="polite"></div></section>
 <section class="panel hidden" id="library"><h2>Your photo library</h2><label for="files">Choose photos (JPEG, PNG, WebP, GIF, HEIC; max 10 MB each)</label><input id="files" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic" multiple style="width:100%;margin-bottom:12px">
 <div class="row"><button id="upload"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-5 5 5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span>Upload selected photos</span></button><button id="refresh" class="secondary"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.5-3"/></svg><span>Refresh library</span></button></div><p class="muted">All photos stay in one folder. Categories are labels, not folders. Labels and captions are saved separately to your private cloud metadata.</p><div id="gallery" class="gallery"></div><div class="row" style="margin-top:14px"><button id="loadMore" class="secondary hidden"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Load more photos</span></button></div></section>
-<small>ARC_SILK Photos Plugin • One collection, category labels, private storage</small>
+<small>Pluginflex Photo Manager • One private collection, thoughtful labels, secure access</small>
 </main>
 <script type="module">
 let supabase=null;
