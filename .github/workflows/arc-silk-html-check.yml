@@ -8,6 +8,10 @@ on:
 
 jobs:
   static-html-check:
+    # Seller Studio is currently only present on the development branch.
+    # Keep this branch-specific contract check on PRs and development pushes;
+    # main currently contains only the public launch page.
+    if: github.event_name == 'pull_request' || github.ref_name == 'arc-silk-v117-seller-discovery-fix'
     runs-on: ubuntu-latest
     steps:
       - name: Check out pull-request head (or pushed commit)
@@ -29,7 +33,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Verify deployed Edge Functions reject unauthenticated writes
