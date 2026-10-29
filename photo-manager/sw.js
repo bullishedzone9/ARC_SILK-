@@ -1,4 +1,4 @@
-const CACHE_NAME = "pluginflex-shell-v2";
+const CACHE_NAME = "pluginflex-shell-v3";
 const CACHE_PREFIX = "pluginflex-shell-";
 const SHELL = ["./", "./manifest.webmanifest", "./icon.svg"];
 
