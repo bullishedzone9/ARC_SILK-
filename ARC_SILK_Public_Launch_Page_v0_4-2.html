@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#071438"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./arcsilk-icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./arcsilk-icon.svg">
 <title>ARC_SILK — Where Sound Finds Its Specialist</title>
 <style>
 :root{--bg:#101012;--panel:#19191d;--muted:#aaa8ad;--text:#f7f4f1;--peach:#f6c2a8;--gold:#d9ad78;--line:#343238}
@@ -37,5 +38,33 @@
 <footer><div class="brand">ARC_SILK</div><p>Where Sound Finds Its Specialist.</p><p>Preview build • Not yet a live marketplace. Prices, payment rails, legal terms, privacy notice, support contact, and production deployment must be finalized before public commercial launch.</p></footer>
 <script>
 document.getElementById('interest').addEventListener('submit',function(e){e.preventDefault();const email=document.getElementById('email').value;const type=document.getElementById('interestType').value;const subject=encodeURIComponent('ARC_SILK early access request');const body=encodeURIComponent('Please contact me about ARC_SILK early access.\\nEmail: '+email+'\\nI am: '+type);document.getElementById('status').textContent='Your email app may open with a prepared inquiry. This preview has not submitted your details.';window.location.href='mailto:hello@arc-silk.example?subject='+subject+'&body='+body;});
+</script>
+<script>
+let deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  const button = document.getElementById("installArcsilk");
+  if (button) button.hidden = false;
+});
+window.addEventListener("appinstalled", () => {
+  const button = document.getElementById("installArcsilk");
+  if (button) { button.hidden = true; button.textContent = "ARC_SILK installed"; }
+});
+const installButton = document.getElementById("installArcsilk");
+if (installButton) installButton.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) {
+    document.getElementById("installStatus").textContent = "On Android, open this page in Chrome, tap the three-dot menu, then choose Install app or Add to Home screen.";
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const result = await deferredInstallPrompt.userChoice;
+  document.getElementById("installStatus").textContent = result.outcome === "accepted" ? "Installation accepted." : "Installation dismissed; you can keep using ARC_SILK in your browser.";
+  deferredInstallPrompt = null;
+  installButton.hidden = true;
+});
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
 </script>
 </body></html>
