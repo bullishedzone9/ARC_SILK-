@@ -57,7 +57,8 @@ function decodeBase64(value: string): Uint8Array {
   return bytes;
 }
 
-Deno.serve(pipeline([withOAuthProtectedResource(), withSupabase({ auth: "user" })], async (req: Request, ctx: object) => {\n  const { supabase } = ctx as { supabase: any };
+Deno.serve(pipeline([withOAuthProtectedResource(), withSupabase({ auth: "user" })], async (req: Request, ctx: object) => {
+  const { supabase } = ctx as { supabase: any };
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Use POST for MCP JSON-RPC requests." }), { status: 405, headers: cors });
 
