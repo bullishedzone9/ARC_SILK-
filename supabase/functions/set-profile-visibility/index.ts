@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
     });
     const { data: profile, error: profileError } = await admin
       .from("profiles")
-      .select("user_id, username, display_name, is_public")
+      .select("user_id, username, display_name, is_public, is_seller")
       .eq("user_id", authData.user.id)
       .maybeSingle();
 
@@ -63,6 +63,31 @@ Deno.serve(async (req: Request) => {
     if (!profile) return json(404, { error: "profile_not_found" });
 
     if (body.is_public) {
+      // This function writes with the service-role client, so database triggers that
+      // depend on auth.uid() cannot be the only eligibility check.
+      if (!profile.is_seller) {
+        return json(403, { error: "seller_activation_required" });
+      }
+
+      const { count: qualifyingCount, error: countError } = await admin
+        .from("marketplace_listings")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_id", authData.user.id)
+        .in("status", ["submitted", "active"]);
+
+      if (countError) {
+        console.error("Qualifying listing count failed:", countError.message);
+        return json(500, { error: "listing_check_failed" });
+      }
+      if ((qualifyingCount ?? 0) < 5) {
+        return json(422, {
+          error: "seller_requirements_not_met",
+          qualifying_listings: qualifyingCount ?? 0,
+          required_listings: 5,
+          remaining: 5 - (qualifyingCount ?? 0),
+        });
+      }
+
       const username = (profile.username ?? "").trim();
       const displayName = (profile.display_name ?? "").trim();
       if (username.length < 3 || displayName.length < 2) {
