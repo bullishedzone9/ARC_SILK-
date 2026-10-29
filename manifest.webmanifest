@@ -1,15 +1,20 @@
 {
-  "id": "./ARC_SILK_Public_Launch_Page_v0_4-2.html",
+  "id": "./",
   "name": "ARC_SILK",
   "short_name": "ARC_SILK",
   "description": "Where Sound Finds Its Specialist.",
-  "start_url": "./ARC_SILK_Public_Launch_Page_v0_4-2.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#050b1c",
   "theme_color": "#071438",
   "icons": [
-    { "src": "./arcsilk-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "./arcsilk-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }
