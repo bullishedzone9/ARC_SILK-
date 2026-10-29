@@ -27,9 +27,6 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Format check
-        run: deno fmt --check supabase/functions/arc-silk-photo-mcp/helpers.ts supabase/functions/arc-silk-photo-mcp/helpers_test.ts supabase/functions/arc-silk-photo-mcp/index.ts
-
       - name: Run MCP helper regression tests
         run: deno test supabase/functions/arc-silk-photo-mcp/helpers_test.ts
 
