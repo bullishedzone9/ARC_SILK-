@@ -82,6 +82,7 @@ Deno.serve(pipeline([withOAuthProtectedResource(), withSupabase({ auth: "user" }
   if (body.method === "initialize") {
     const requestedVersion = body.params?.protocolVersion;
     const negotiated = negotiateProtocolVersion(requestedVersion);
+    if (!negotiated) return errorResponse(id, -32602, "Invalid params: params.protocolVersion must be a string.");
     return jsonrpc(id, { protocolVersion: negotiated.protocolVersion, capabilities: { tools: {} }, serverInfo: { name: "arc-silk-photo-library", version: "0.1.1" } });
   }
   if (body.method === "notifications/initialized" || body.method === "ping") return jsonrpc(id, {});
