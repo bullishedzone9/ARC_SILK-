@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
         let q=db.from("mesh_resources").select("id,owner_user_id,resource_domain,resource_type,title,description,city,region,country_code,latitude,longitude,remote_available,verification_status").eq("availability_status","available").in("listing_scope",["network","public"]).neq("owner_user_id",actor).limit(500);
         if(signal.resource_domain) q=q.eq("resource_domain",signal.resource_domain);
         if(signal.resource_type) q=q.ilike("resource_type",`%${signal.resource_type.replace(/[%_]/g,"").slice(0,80)}%`);
-        if(signal.connection_mode==="remote") q=q.eq("remote_available",true);
+        if(signal.connection_mode==="remote" || signal.distribution_scope==="remote") q=q.eq("remote_available",true);
         const {data:resources,error:re}=await q;
         if(re) return json(500,{error:"Resource matching query failed."});
         for(const resource of resources||[]){
@@ -168,6 +168,7 @@ Deno.serve(async (req: Request) => {
         for(const request of requests||[]){
           const offerLocation={city:signal.city,region:signal.region,country_code:signal.country_code,latitude:signal.latitude,longitude:signal.longitude};
           if(request.distribution_scope==="specific_users" && !request.destination_user_ids.includes(actor)) continue;
+          if(!geoAllows(signal.distribution_scope,signal,request)) continue;
           if(request.distribution_scope==="remote" && signal.connection_mode==="physical") continue;
           if(!geoAllows(request.distribution_scope,request,offerLocation)) continue;
           if(request.connection_mode==="remote" && signal.connection_mode==="physical") continue;
