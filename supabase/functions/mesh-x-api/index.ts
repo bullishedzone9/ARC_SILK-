@@ -12,6 +12,27 @@ const json = (status: number, body: unknown) =>
 const required = (v: unknown, max = 5000) =>
   typeof v === "string" && v.trim().length > 0 && v.length <= max;
 
+
+const validGeo = (lat: unknown, lon: unknown) =>
+  typeof lat === "number" && Number.isFinite(lat) && lat >= -90 && lat <= 90 &&
+  typeof lon === "number" && Number.isFinite(lon) && lon >= -180 && lon <= 180;
+const distanceKm = (aLat:number,aLon:number,bLat:number,bLon:number) => {
+  const rad=(v:number)=>v*Math.PI/180;
+  const dLat=rad(bLat-aLat), dLon=rad(bLon-aLon);
+  const h=Math.sin(dLat/2)**2+Math.cos(rad(aLat))*Math.cos(rad(bLat))*Math.sin(dLon/2)**2;
+  return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+};
+const geoAllows = (scope:string, origin:any, target:any) => {
+  if (scope==="worldwide" || scope==="remote") return true;
+  if (scope==="specific_users") return true;
+  if (scope==="city" || scope==="neighbourhood") return !!origin.city && !!target.city && origin.city.toLowerCase()===target.city.toLowerCase();
+  if (scope==="region") return !!origin.region && !!target.region && origin.region.toLowerCase()===target.region.toLowerCase();
+  if (scope==="country") return !!origin.country_code && origin.country_code===target.country_code;
+  if (scope==="selected_countries") return Array.isArray(origin.selected_country_codes) && origin.selected_country_codes.includes(target.country_code);
+  if (scope==="radius") return validGeo(origin.latitude,origin.longitude) && validGeo(target.latitude,target.longitude) && distanceKm(origin.latitude,origin.longitude,target.latitude,target.longitude)<=origin.radius_km;
+  return false;
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json(405, { error: "POST required" });
@@ -65,6 +86,8 @@ Deno.serve(async (req: Request) => {
         city: typeof body.city === "string" ? body.city.slice(0,120) : null,
         region: typeof body.region === "string" ? body.region.slice(0,120) : null,
         country_code: typeof body.country_code === "string" ? body.country_code.toUpperCase() : null,
+        latitude: validGeo(body.latitude,body.longitude) ? body.latitude : null,
+        longitude: validGeo(body.latitude,body.longitude) ? body.longitude : null,
         remote_available: body.remote_available === true,
         attributes: body.attributes && typeof body.attributes === "object" && !Array.isArray(body.attributes) ? body.attributes : {},
       };
@@ -96,6 +119,9 @@ Deno.serve(async (req: Request) => {
         city: typeof body.city === "string" ? body.city.slice(0,120) : null,
         region: typeof body.region === "string" ? body.region.slice(0,120) : null,
         country_code: typeof body.country_code === "string" ? body.country_code.toUpperCase() : null,
+        latitude: validGeo(body.latitude,body.longitude) ? body.latitude : null,
+        longitude: validGeo(body.latitude,body.longitude) ? body.longitude : null,
+        selected_country_codes: Array.isArray(body.selected_country_codes) ? body.selected_country_codes.filter((x:any)=>typeof x==="string" && /^[A-Z]{2}$/.test(x)).slice(0,50) : [],
         destination_user_ids: body.distribution_scope === "specific_users" && Array.isArray(body.destination_user_ids) ? body.destination_user_ids.slice(0,50) : [],
         status: "open", expires_at: new Date(Date.now() + 7*86400000).toISOString(),
       };
@@ -107,30 +133,57 @@ Deno.serve(async (req: Request) => {
     if (action === "route_signal") {
       if (!required(body.signal_id,80)) return json(400,{error:"signal_id required"});
       const { data: signal, error: se } = await db.from("mesh_signals").select("*").eq("id",body.signal_id).eq("requester_user_id",actor).eq("status","open").single();
-      if (se || !signal) return json(404,{error:"Open signal not found for this requester."});
+      if (se || !signal) return json(404,{error:"Open signal not found for this account."});
       if (signal.expires_at && new Date(signal.expires_at).getTime() < Date.now()) return json(410,{error:"Signal expired."});
-      let query = db.from("mesh_resources").select("id,owner_user_id,resource_domain,resource_type,title,description,city,region,country_code,remote_available,verification_status").eq("availability_status","available").in("listing_scope",["network","public"]).neq("owner_user_id",actor).limit(250);
-      if (signal.resource_domain) query = query.eq("resource_domain",signal.resource_domain);
-      if (signal.resource_type) query = query.ilike("resource_type",`%${signal.resource_type.replace(/[%_]/g,"").slice(0,80)}%`);
-      if (signal.distribution_scope === "city" || signal.distribution_scope === "radius" || signal.distribution_scope === "neighbourhood") {
-        if (signal.city) query = query.ilike("city",signal.city);
-      } else if (signal.distribution_scope === "region" && signal.region) query = query.ilike("region",signal.region);
-      else if (signal.distribution_scope === "country" && signal.country_code) query = query.eq("country_code",signal.country_code);
-      if (signal.connection_mode === "remote") query = query.eq("remote_available",true);
-      const { data: resources, error: re } = await query;
-      if (re) return json(500,{error:"Resource matching query failed."});
-      const matches = [];
-      for (const resource of (resources || [])) {
-        if (signal.distribution_scope === "specific_users" && !signal.destination_user_ids.includes(resource.owner_user_id)) continue;
-        const score = (signal.resource_type && resource.resource_type.toLowerCase().includes(signal.resource_type.toLowerCase()) ? 70 : 45) + (resource.city && signal.city && resource.city.toLowerCase()===signal.city.toLowerCase()?20:0) + (resource.verification_status==="verified"?10:0);
-        const preview = { intent_type:signal.intent_type, description:signal.description, resource_domain:signal.resource_domain, resource_type:signal.resource_type, city:signal.city, region:signal.region, connection_mode:signal.connection_mode };
-        const { data: match, error: me } = await db.from("mesh_signal_matches").upsert({
-          signal_id:signal.id, requester_user_id:actor, provider_user_id:resource.owner_user_id, resource_id:resource.id,
-          compatibility_score:Math.min(score,100), match_reasons:[resource.city && signal.city && resource.city.toLowerCase()===signal.city.toLowerCase()?"Same city":"Resource category match",resource.verification_status==="verified"?"Resource marked verified":"Provider claim not independently verified"],safe_signal_preview:preview,status:"notified"
-        },{onConflict:"signal_id,provider_user_id"}).select("id,provider_user_id,resource_id,compatibility_score,match_reasons").single();
-        if (!me && match) matches.push(match);
+      if (signal.distribution_scope==="radius" && !validGeo(signal.latitude,signal.longitude)) return json(400,{error:"Add a valid latitude and longitude to use radius matching."});
+      const matches:any[]=[];
+      if (signal.intent_type==="request") {
+        let q=db.from("mesh_resources").select("id,owner_user_id,resource_domain,resource_type,title,description,city,region,country_code,latitude,longitude,remote_available,verification_status").eq("availability_status","available").in("listing_scope",["network","public"]).neq("owner_user_id",actor).limit(500);
+        if(signal.resource_domain) q=q.eq("resource_domain",signal.resource_domain);
+        if(signal.resource_type) q=q.ilike("resource_type",`%${signal.resource_type.replace(/[%_]/g,"").slice(0,80)}%`);
+        if(signal.connection_mode==="remote") q=q.eq("remote_available",true);
+        const {data:resources,error:re}=await q;
+        if(re) return json(500,{error:"Resource matching query failed."});
+        for(const resource of resources||[]){
+          if(signal.distribution_scope==="specific_users" && !signal.destination_user_ids.includes(resource.owner_user_id)) continue;
+          if(!geoAllows(signal.distribution_scope,signal,resource)) continue;
+          const typeScore=signal.resource_type && resource.resource_type.toLowerCase().includes(signal.resource_type.toLowerCase())?70:45;
+          const locationScore=resource.city&&signal.city&&resource.city.toLowerCase()===signal.city.toLowerCase()?20:0;
+          const verified=resource.verification_status==="verified"?10:0;
+          const score=Math.min(typeScore+locationScore+verified,100);
+          const preview={intent_type:"request",description:signal.description,resource_domain:signal.resource_domain,resource_type:signal.resource_type,city:signal.city,region:signal.region,country_code:signal.country_code,connection_mode:signal.connection_mode};
+          const {data:match,error:me}=await db.from("mesh_signal_matches").upsert({
+            signal_id:signal.id,requester_user_id:actor,provider_user_id:resource.owner_user_id,resource_id:resource.id,
+            compatibility_score:score,match_reasons:[locationScore?"Same city":"Resource category match",verified?"Provider marked verified":"Provider claim not independently verified"],
+            safe_signal_preview:preview,status:"notified"
+          },{onConflict:"signal_id,provider_user_id"}).select("id,provider_user_id,resource_id,compatibility_score,match_reasons").single();
+          if(!me&&match) matches.push(match);
+        }
+      } else {
+        let q=db.from("mesh_signals").select("id,requester_user_id,description,resource_domain,resource_type,connection_mode,distribution_scope,radius_km,city,region,country_code,latitude,longitude,selected_country_codes,destination_user_ids").eq("intent_type","request").eq("status","open").neq("requester_user_id",actor).limit(500);
+        if(signal.resource_domain) q=q.eq("resource_domain",signal.resource_domain);
+        if(signal.resource_type) q=q.ilike("resource_type",`%${signal.resource_type.replace(/[%_]/g,"").slice(0,80)}%`);
+        const {data:requests,error:re}=await q;
+        if(re) return json(500,{error:"Request-side matching query failed."});
+        for(const request of requests||[]){
+          const offerLocation={city:signal.city,region:signal.region,country_code:signal.country_code,latitude:signal.latitude,longitude:signal.longitude};
+          if(request.distribution_scope==="specific_users" && !request.destination_user_ids.includes(actor)) continue;
+          if(request.distribution_scope==="remote" && signal.connection_mode==="physical") continue;
+          if(!geoAllows(request.distribution_scope,request,offerLocation)) continue;
+          if(request.connection_mode==="remote" && signal.connection_mode==="physical") continue;
+          const typeScore=request.resource_type&&signal.resource_type.toLowerCase().includes(request.resource_type.toLowerCase())?70:45;
+          const locationScore=request.city&&signal.city&&request.city.toLowerCase()===signal.city.toLowerCase()?20:0;
+          const preview={intent_type:"request",description:request.description,resource_domain:request.resource_domain,resource_type:request.resource_type,city:request.city,region:request.region,country_code:request.country_code,offer:{description:signal.description,resource_type:signal.resource_type,city:signal.city,region:signal.region,country_code:signal.country_code}};
+          const {data:match,error:me}=await db.from("mesh_signal_matches").upsert({
+            signal_id:request.id,requester_user_id:request.requester_user_id,provider_user_id:actor,resource_id:null,
+            compatibility_score:Math.min(typeScore+locationScore,100),
+            match_reasons:[locationScore?"Same city":"Resource category match","Offer/request intent pair"],
+            safe_signal_preview:preview,status:"notified"
+          },{onConflict:"signal_id,provider_user_id"}).select("id,provider_user_id,resource_id,compatibility_score,match_reasons").single();
+          if(!me&&match) matches.push(match);
+        }
       }
-      return json(200,{signal_id:signal.id,match_count:matches.length,matches,notice:"Basic deterministic matching only; no push notifications are configured yet."});
+      return json(200,{signal_id:signal.id,intent_type:signal.intent_type,match_count:matches.length,matches,notice:"Request and offer matching enabled. Geographic filtering uses city/region/country or coordinates for radius. No push notifications configured."});
     }
 
     if (action === "request_connection") {
@@ -147,16 +200,12 @@ Deno.serve(async (req: Request) => {
 
     if (action === "respond_connection") {
       if (!required(body.connection_request_id,80) || !["accepted","declined"].includes(body.decision)) return json(400,{error:"Valid request id and accept/decline decision required."});
-      const { data: cr, error: ce } = await db.from("mesh_connection_requests").select("*").eq("id",body.connection_request_id).eq("requester_user_id",actor).eq("status","pending").single();
-      if (ce || !cr) return json(404,{error:"Pending connection request not found for this requester."});
-      const { data: changed, error: ue } = await db.from("mesh_connection_requests").update({status:body.decision,responded_at:new Date().toISOString()}).eq("id",cr.id).eq("status","pending").select("id").single();
-      if (ue || !changed) return json(409,{error:"Connection request already handled."});
+      const { data: result, error } = await db.rpc("mesh_x_respond_connection_atomic", {
+        p_request_id: body.connection_request_id, p_actor: actor, p_decision: body.decision,
+      });
+      if (error || !result?.length) return json(409,{error:"Connection request could not be processed."});
       if (body.decision === "declined") return json(200,{status:"declined"});
-      const { data: convo, error: coe } = await db.from("mesh_conversations").insert({
-        connection_request_id:cr.id,signal_id:cr.signal_id,requester_user_id:cr.requester_user_id,provider_user_id:cr.provider_user_id,status:"active"
-      }).select("id,connection_request_id,status,created_at").single();
-      if (coe) return json(500,{error:"Accepted request recorded, but conversation creation failed. Retry support required."});
-      return json(200,{status:"accepted",conversation:convo});
+      return json(200,{status:"accepted",conversation:{id:result[0].conversation_id,status:"active"}});
     }
 
     if (action === "send_message") {
