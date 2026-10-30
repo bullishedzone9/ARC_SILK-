@@ -172,7 +172,7 @@ Deno.serve(async (req: Request) => {
           if(request.distribution_scope==="remote" && signal.connection_mode==="physical") continue;
           if(!geoAllows(request.distribution_scope,request,offerLocation)) continue;
           if(request.connection_mode==="remote" && signal.connection_mode==="physical") continue;
-          const typeScore=request.resource_type&&signal.resource_type.toLowerCase().includes(request.resource_type.toLowerCase())?70:45;
+          const typeScore=request.resource_type&&signal.resource_type&&signal.resource_type.toLowerCase().includes(request.resource_type.toLowerCase())?70:45;
           const locationScore=request.city&&signal.city&&request.city.toLowerCase()===signal.city.toLowerCase()?20:0;
           const preview={intent_type:"request",description:request.description,resource_domain:request.resource_domain,resource_type:request.resource_type,city:request.city,region:request.region,country_code:request.country_code,offer:{description:signal.description,resource_type:signal.resource_type,city:signal.city,region:signal.region,country_code:signal.country_code}};
           const {data:match,error:me}=await db.from("mesh_signal_matches").upsert({
@@ -190,7 +190,11 @@ Deno.serve(async (req: Request) => {
     if (action === "request_connection") {
       if (!required(body.match_id,80)) return json(400,{error:"match_id required"});
       const { data: match, error: me } = await db.from("mesh_signal_matches").select("id,signal_id,requester_user_id,provider_user_id,resource_id").eq("id",body.match_id).eq("provider_user_id",actor).single();
-      if (me || !match) return json(404,{error:"No matching provider opportunity for this account."});
+      if (me || !match || match.requester_user_id===actor) return json(404,{error:"No matching provider opportunity for this account."});
+      const { data: signal, error: signalError } = await db.from("mesh_signals").select("id,status,expires_at").eq("id",match.signal_id).eq("requester_user_id",match.requester_user_id).single();
+      if (signalError || !signal || signal.status!=="open" || (signal.expires_at && new Date(signal.expires_at).getTime()<Date.now())) return json(409,{error:"This signal is no longer open for connection requests."});
+      const { data: existing } = await db.from("mesh_connection_requests").select("id,status").eq("signal_id",match.signal_id).eq("provider_user_id",actor).in("status",["pending","accepted"]).maybeSingle();
+      if (existing) return json(200,{connection_request:existing,notice:"A connection request already exists for this signal."});
       const { data, error } = await db.from("mesh_connection_requests").insert({
         signal_id:match.signal_id,match_id:match.id,requester_user_id:match.requester_user_id,provider_user_id:actor,resource_id:match.resource_id,
         opening_message:required(body.opening_message,2000)?body.opening_message.trim():""
@@ -233,7 +237,7 @@ Deno.serve(async (req: Request) => {
     if (action === "list_messages") {
       if (!required(body.conversation_id,80)) return json(400,{error:"conversation_id required"});
       const { data: c } = await db.from("mesh_conversations").select("id,requester_user_id,provider_user_id,status").eq("id",body.conversation_id).single();
-      if (!c || ![c.requester_user_id,c.provider_user_id].includes(actor)) return json(403,{error:"Conversation access denied."});
+      if (!c || c.status!=="active" || ![c.requester_user_id,c.provider_user_id].includes(actor)) return json(403,{error:"Active conversation access denied."});
       const { data, error } = await db.from("mesh_messages").select("id,sender_user_id,body,created_at").eq("conversation_id",c.id).order("created_at").limit(200);
       if (error) return json(500,{error:"Could not load messages."});
       return json(200,{messages:data});
