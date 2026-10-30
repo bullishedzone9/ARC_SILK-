@@ -41,7 +41,7 @@ declare
   v_count integer;
   v_run_id uuid;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
+  if coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
     raise exception 'service_role_required' using errcode = '42501';
   end if;
 
